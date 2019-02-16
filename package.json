@@ -1,0 +1,17 @@
+{
+  "name": "gradients",
+  "version": "1.0.0",
+  "description": "Generate gradients from colourlovers palettes",
+  "main": "index.js",
+  "scripts": {
+    "start": "elm-live src/Main.elm --pushstate"
+  },
+  "keywords": [],
+  "author": "Hendrik Lammers <lammers@gmail.com> (http://www.hendriklammers.com)",
+  "license": "MIT",
+  "devDependencies": {
+    "elm": "^0.19.0-bugfix6",
+    "elm-format": "^0.8.1",
+    "elm-live": "^3.4.0"
+  }
+}
