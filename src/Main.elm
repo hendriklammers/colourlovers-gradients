@@ -4,6 +4,8 @@ import Browser
 import Html exposing (Html, text)
 import Http
 import Json.Decode as Decode exposing (Decoder)
+import ParseInt exposing (parseIntHex)
+import Regex
 
 
 main : Program () Model Msg
@@ -21,7 +23,11 @@ type alias Model =
 
 
 type alias Color =
-    String
+    { red : Int
+    , green : Int
+    , blue : Int
+    , alpha : Int
+    }
 
 
 type alias Palette =
@@ -33,9 +39,31 @@ init _ =
     ( [], getPalettes )
 
 
-hexToColor : String -> Maybe Color
+rrggbb : Regex.Regex
+rrggbb =
+    Maybe.withDefault Regex.never <|
+        Regex.fromString "^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?$"
+
+
+hexToColor : String -> Result String Color
 hexToColor hex =
-    Just hex
+    Regex.findAtMost 1 rrggbb hex
+        |> List.head
+        |> Maybe.map .submatches
+        |> Maybe.map (List.filterMap identity)
+        |> Result.fromMaybe "Unable to parse the string into a valid Color"
+        |> Result.andThen
+            (\color ->
+                case List.map parseIntHex color of
+                    [ Ok r, Ok g, Ok b, Ok a ] ->
+                        Ok (Color r g b a)
+
+                    [ Ok r, Ok g, Ok b ] ->
+                        Ok (Color r g b 1)
+
+                    _ ->
+                        Err "Unable to parse the string into a valid Color"
+            )
 
 
 getPalettes : Cmd Msg
@@ -51,10 +79,10 @@ colorDecoder =
     Decode.andThen
         (\hex ->
             case hexToColor hex of
-                Just color ->
+                Ok color ->
                     Decode.succeed color
 
-                Nothing ->
+                Err _ ->
                     Decode.fail
                         ("Unable to decode " ++ hex ++ " into a Color.")
         )
