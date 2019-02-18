@@ -32,7 +32,7 @@ type alias Color =
 
 type alias Palette =
     { colors : List Color
-    , colorWidths : List Float
+    , widths : List Float
     }
 
 
@@ -47,8 +47,8 @@ type Msg
 
 
 type Navigation
-    = Forward
-    | Backward
+    = Next
+    | Previous
     | Index Int
 
 
@@ -100,22 +100,33 @@ update msg model =
             ( model, Cmd.none )
 
         Navigate nav ->
-            let
-                current =
-                    case nav of
-                        Forward ->
-                            model.current + 1
-
-                        Backward ->
-                            model.current - 1
-
-                        Index index ->
-                            index
-            in
-            ( { model | current = current }, Cmd.none )
+            ( { model | current = navigatePalettes model nav }
+            , Cmd.none
+            )
 
         Ignore ->
             ( model, Cmd.none )
+
+
+navigatePalettes : Model -> Navigation -> Int
+navigatePalettes { current, palettes } nav =
+    case nav of
+        Next ->
+            if current < List.length palettes - 1 then
+                current + 1
+
+            else
+                0
+
+        Previous ->
+            if current > 0 then
+                current - 1
+
+            else
+                List.length palettes - 1
+
+        Index index ->
+            index
 
 
 keyDecoder : Decode.Decoder Msg
@@ -124,10 +135,10 @@ keyDecoder =
         (\key ->
             case key of
                 "ArrowRight" ->
-                    Navigate Forward
+                    Navigate Next
 
                 "ArrowLeft" ->
-                    Navigate Backward
+                    Navigate Previous
 
                 _ ->
                     Ignore
@@ -152,7 +163,7 @@ globalStyles =
 
 
 viewGradient : Gradient -> Html Msg
-viewGradient { colors } =
+viewGradient { colors, widths } =
     case colors of
         color1 :: color2 :: rest ->
             let
