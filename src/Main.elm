@@ -31,7 +31,9 @@ type alias Color =
 
 
 type alias Palette =
-    List Color
+    { colors : List Color
+    , colorWidths : List Float
+    }
 
 
 type alias Gradient =
@@ -64,20 +66,31 @@ getPalettes =
     Http.get
         -- { url = "https://cors-anywhere.herokuapp.com/http://www.colourlovers.com/api/palettes/top?format=json"
         { url = "/data/palettes.json"
-        , expect = Http.expectJson ReceivePalettes palettesDecoder
+        , expect = Http.expectJson ReceivePalettes paletteListDecoder
         }
 
 
-palettesDecoder : Decoder (List Palette)
-palettesDecoder =
-    Decode.list (Decode.field "colors" (Decode.list Decode.string))
+paletteDecoder : Decoder Palette
+paletteDecoder =
+    Decode.map2 Palette
+        (Decode.field "colors" (Decode.list Decode.string))
+        (Decode.field "colorWidths" (Decode.list Decode.float))
+
+
+paletteListDecoder : Decoder (List Palette)
+paletteListDecoder =
+    Decode.list paletteDecoder
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ReceivePalettes (Ok palettes) ->
-            ( { model | palettes = palettes }, Cmd.none )
+            ( { model
+                | palettes = palettes
+              }
+            , Cmd.none
+            )
 
         ReceivePalettes (Err err) ->
             let
@@ -138,10 +151,10 @@ globalStyles =
         ]
 
 
-viewGradient : Maybe Gradient -> Html Msg
-viewGradient colors =
+viewGradient : Gradient -> Html Msg
+viewGradient { colors } =
     case colors of
-        Just (color1 :: color2 :: rest) ->
+        color1 :: color2 :: rest ->
             let
                 gradient =
                     C.linearGradient2
@@ -159,7 +172,7 @@ viewGradient colors =
                 []
 
         _ ->
-            text "No gradient available"
+            text ""
 
 
 getGradient : Int -> List Palette -> Maybe Gradient
@@ -178,5 +191,10 @@ view model =
             ]
         ]
         [ globalStyles
-        , viewGradient (getGradient model.current model.palettes)
+        , case getGradient model.current model.palettes of
+            Just gradient ->
+                viewGradient gradient
+
+            Nothing ->
+                text "Gradient unavailable"
         ]
