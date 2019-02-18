@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Events exposing (onKeyUp)
 import Css as C
 import Css.Global exposing (body, global)
 import Html.Styled exposing (Html, div, text, toUnstyled)
@@ -21,7 +22,7 @@ main =
 
 type alias Model =
     { palettes : List Palette
-    , gradient : Maybe Gradient
+    , current : Int
     }
 
 
@@ -37,10 +38,22 @@ type alias Gradient =
     Palette
 
 
+type Msg
+    = ReceivePalettes (Result Http.Error (List Palette))
+    | Navigate Navigation
+    | Ignore
+
+
+type Navigation
+    = Forward
+    | Backward
+    | Index Int
+
+
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { palettes = []
-      , gradient = Nothing
+      , current = 0
       }
     , getPalettes
     )
@@ -60,20 +73,11 @@ palettesDecoder =
     Decode.list (Decode.field "colors" (Decode.list Decode.string))
 
 
-type Msg
-    = ReceivePalettes (Result Http.Error (List Palette))
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ReceivePalettes (Ok palettes) ->
-            ( { model
-                | palettes = palettes
-                , gradient = List.head palettes
-              }
-            , Cmd.none
-            )
+            ( { model | palettes = palettes }, Cmd.none )
 
         ReceivePalettes (Err err) ->
             let
@@ -82,10 +86,45 @@ update msg model =
             in
             ( model, Cmd.none )
 
+        Navigate nav ->
+            let
+                current =
+                    case nav of
+                        Forward ->
+                            model.current + 1
+
+                        Backward ->
+                            model.current - 1
+
+                        Index index ->
+                            index
+            in
+            ( { model | current = current }, Cmd.none )
+
+        Ignore ->
+            ( model, Cmd.none )
+
+
+keyDecoder : Decode.Decoder Msg
+keyDecoder =
+    Decode.map
+        (\key ->
+            case key of
+                "ArrowRight" ->
+                    Navigate Forward
+
+                "ArrowLeft" ->
+                    Navigate Backward
+
+                _ ->
+                    Ignore
+        )
+        (Decode.field "key" Decode.string)
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    onKeyUp keyDecoder
 
 
 globalStyles : Html Msg
@@ -99,10 +138,10 @@ globalStyles =
         ]
 
 
-viewGradient : Gradient -> Html Msg
+viewGradient : Maybe Gradient -> Html Msg
 viewGradient colors =
     case colors of
-        color1 :: color2 :: rest ->
+        Just (color1 :: color2 :: rest) ->
             let
                 gradient =
                     C.linearGradient2
@@ -120,7 +159,14 @@ viewGradient colors =
                 []
 
         _ ->
-            text ""
+            text "No gradient available"
+
+
+getGradient : Int -> List Palette -> Maybe Gradient
+getGradient index palettes =
+    palettes
+        |> List.drop index
+        |> List.head
 
 
 view : Model -> Html Msg
@@ -132,10 +178,5 @@ view model =
             ]
         ]
         [ globalStyles
-        , case model.gradient of
-            Just gradient ->
-                viewGradient gradient
-
-            Nothing ->
-                text "No gradient available"
+        , viewGradient (getGradient model.current model.palettes)
         ]
