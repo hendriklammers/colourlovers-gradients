@@ -284,7 +284,17 @@ viewPalette current index { colors, widths } =
         activeStyles =
             if current == index then
                 C.batch
-                    [ C.border3 (C.px 5) C.solid (C.hex "fff")
+                    [ C.before
+                        [ C.display C.block
+                        , C.property "content" "''"
+                        , C.position C.absolute
+                        , C.left (C.px 0)
+                        , C.top (C.px 0)
+                        , C.width (C.pct 100)
+                        , C.height (C.pct 100)
+                        , C.zIndex (C.int 2)
+                        , C.border3 (C.px 5) C.solid (C.hex "fff")
+                        ]
                     ]
 
             else
@@ -293,6 +303,7 @@ viewPalette current index { colors, widths } =
     li
         [ css
             [ C.displayFlex
+            , C.position C.relative
             , C.height (C.px 150)
             , C.cursor C.pointer
             , activeStyles
