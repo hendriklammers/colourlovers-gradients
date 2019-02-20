@@ -20,10 +20,11 @@ main =
         }
 
 
-type Model
-    = LoadingView
-    | GradientView (List Palette) Index
-    | ErrorView String
+type alias Model =
+    { palettes : List Palette
+    , current : Index
+    , error : Maybe String
+    }
 
 
 type alias Color =
@@ -65,7 +66,10 @@ type Navigation
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( LoadingView
+    ( { palettes = []
+      , current = 0
+      , error = Nothing
+      }
     , getPalettes
     )
 
@@ -95,24 +99,23 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ReceivePalettes (Ok palettes) ->
-            ( GradientView palettes 0
+            ( Model palettes 0 Nothing
             , Cmd.none
             )
 
         ReceivePalettes (Err _) ->
-            ( ErrorView "Unable to load the color palettes from the server"
+            ( { model
+                | error =
+                    Just "Unable to load the color palettes from the server"
+              }
             , Cmd.none
             )
 
         Navigate nav ->
-            ( case model of
-                GradientView palettes current ->
-                    GradientView
-                        palettes
-                        (navigateList palettes current nav)
-
-                _ ->
-                    model
+            ( { model
+                | current =
+                    navigateList model.palettes model.current nav
+              }
             , Cmd.none
             )
 
@@ -244,9 +247,14 @@ viewLoading =
     text "Loading color palettes"
 
 
-viewError : String -> Html Msg
-viewError message =
-    text message
+viewError : Maybe String -> Html Msg
+viewError error =
+    case error of
+        Just message ->
+            text message
+
+        Nothing ->
+            text ""
 
 
 viewContainer : List (Html Msg) -> Html Msg
@@ -263,16 +271,9 @@ viewContainer children =
 view : Model -> Html Msg
 view model =
     viewContainer
-        [ case model of
-            LoadingView ->
-                viewLoading
-
-            ErrorView message ->
-                viewError message
-
-            GradientView palettes current ->
-                getPalette current palettes
-                    |> Maybe.andThen paletteToGradient
-                    |> Maybe.map viewGradient
-                    |> Maybe.withDefault (text "Unable to show gradient")
+        [ viewError model.error
+        , getPalette model.current model.palettes
+            |> Maybe.andThen paletteToGradient
+            |> Maybe.map viewGradient
+            |> Maybe.withDefault (text "Unable to show gradient")
         ]
