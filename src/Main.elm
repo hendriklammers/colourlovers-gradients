@@ -37,7 +37,7 @@ type alias Palette =
 
 
 type alias Gradient =
-    Palette
+    List ( Color, Float )
 
 
 type Msg
@@ -100,16 +100,30 @@ update msg model =
             ( model, Cmd.none )
 
         Navigate nav ->
-            ( { model | current = navigatePalettes model nav }
-            , Cmd.none
-            )
+            let
+                current =
+                    case nav of
+                        Next ->
+                            if model.current < List.length model.palettes - 1 then
+                                model.current + 1
+
+                            else
+                                0
+
+                        Previous ->
+                            model.current - 1
+
+                        Index index ->
+                            index
+            in
+            ( { model | current = current }, Cmd.none )
 
         Ignore ->
             ( model, Cmd.none )
 
 
-navigatePalettes : Model -> Navigation -> Int
-navigatePalettes { current, palettes } nav =
+navigatePalettes : Int -> Navigation -> List a -> Int
+navigatePalettes current nav palettes =
     case nav of
         Next ->
             if current < List.length palettes - 1 then
@@ -119,11 +133,7 @@ navigatePalettes { current, palettes } nav =
                 0
 
         Previous ->
-            if current > 0 then
-                current - 1
-
-            else
-                List.length palettes - 1
+            current - 1
 
         Index index ->
             index
@@ -163,16 +173,16 @@ globalStyles =
 
 
 viewGradient : Gradient -> Html Msg
-viewGradient { colors, widths } =
+viewGradient colors =
     case colors of
-        color1 :: color2 :: rest ->
+        ( c1, w1 ) :: ( c2, w2 ) :: xs ->
             let
                 gradient =
                     C.linearGradient2
                         (C.deg 90)
-                        (C.stop (C.hex color1))
-                        (C.stop (C.hex color2))
-                        (List.map (\c -> C.stop (C.hex c)) rest)
+                        (C.stop2 (C.hex c1) (C.pct w1))
+                        (C.stop2 (C.hex c2) (C.pct w2))
+                        (List.map (\( c, w ) -> C.stop2 (C.hex c) (C.pct w)) xs)
             in
             div
                 [ css
@@ -183,11 +193,30 @@ viewGradient { colors, widths } =
                 []
 
         _ ->
-            text ""
+            text "Gradient consists of at least 2 colors"
 
 
-getGradient : Int -> List Palette -> Maybe Gradient
-getGradient index palettes =
+colorStop : List ( Color, Float ) -> Float -> Float
+colorStop gradient width =
+    case gradient of
+        ( _, previousWidth ) :: xs ->
+            previousWidth + width * 100
+
+        _ ->
+            0
+
+
+paletteToGradient : Palette -> Gradient
+paletteToGradient { colors, widths } =
+    List.map2 Tuple.pair colors (0 :: widths)
+        |> List.foldl
+            (\( color, width ) xs -> ( color, colorStop xs width ) :: xs)
+            []
+        |> List.reverse
+
+
+getPalette : Int -> List Palette -> Maybe Palette
+getPalette index palettes =
     palettes
         |> List.drop index
         |> List.head
@@ -202,9 +231,11 @@ view model =
             ]
         ]
         [ globalStyles
-        , case getGradient model.current model.palettes of
-            Just gradient ->
-                viewGradient gradient
+        , case getPalette model.current model.palettes of
+            Just palette ->
+                palette
+                    |> paletteToGradient
+                    |> viewGradient
 
             Nothing ->
                 text "Gradient unavailable"
