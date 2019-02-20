@@ -1,6 +1,6 @@
-# Gradients [![Build Status](https://travis-ci.org/hendriklammers/gradients.svg?branch=master)](https://travis-ci.org/hendriklammers/gradients)
+# colourlovers-gradients [![Build Status](https://travis-ci.org/hendriklammers/colourlovers-gradients.svg?branch=master)](https://travis-ci.org/hendriklammers/colourlovers-gradients)
 
-Generate gradients from colourlovers palettes
+Color palettes from Colourlovers as CSS gradients
 
 
 ## License

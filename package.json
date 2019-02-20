@@ -1,7 +1,7 @@
 {
-  "name": "gradients",
+  "name": "colourlovers-gradients",
   "version": "1.0.0",
-  "description": "Generate gradients from colourlovers palettes",
+  "description": "Color palettes from Colourlovers as CSS gradients",
   "main": "index.js",
   "scripts": {
     "start": "elm-typescript-interop && webpack-dev-server",
