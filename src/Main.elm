@@ -20,10 +20,9 @@ main =
         }
 
 
-type alias Model =
-    { palettes : List Palette
-    , current : Index
-    }
+type Model
+    = LoadingView
+    | GradientView (List Palette) Index
 
 
 type alias Color =
@@ -58,9 +57,7 @@ type Navigation
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { palettes = []
-      , current = 0
-      }
+    ( LoadingView
     , getPalettes
     )
 
@@ -90,9 +87,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ReceivePalettes (Ok palettes) ->
-            ( { model
-                | palettes = palettes
-              }
+            ( GradientView palettes 0
             , Cmd.none
             )
 
@@ -104,9 +99,14 @@ update msg model =
             ( model, Cmd.none )
 
         Navigate nav ->
-            ( { model
-                | current = navigateList model.palettes model.current nav
-              }
+            ( case model of
+                GradientView palettes current ->
+                    GradientView
+                        palettes
+                        (navigateList palettes current nav)
+
+                _ ->
+                    model
             , Cmd.none
             )
 
@@ -222,21 +222,36 @@ getPalette index palettes =
         |> List.head
 
 
-view : Model -> Html Msg
-view model =
+viewLoading : Html Msg
+viewLoading =
+    text "Loading color palettes"
+
+
+viewContainer : List (Html Msg) -> Html Msg
+viewContainer children =
     div
         [ css
             [ C.flex (C.int 1)
             , C.displayFlex
             ]
         ]
-        [ globalStyles
-        , case getPalette model.current model.palettes of
-            Just palette ->
-                palette
-                    |> paletteToGradient
-                    |> viewGradient
+        (globalStyles :: children)
 
-            Nothing ->
-                text "Gradient unavailable"
+
+view : Model -> Html Msg
+view model =
+    viewContainer
+        [ case model of
+            LoadingView ->
+                viewLoading
+
+            GradientView palettes current ->
+                case getPalette current palettes of
+                    Just palette ->
+                        palette
+                            |> paletteToGradient
+                            |> viewGradient
+
+                    Nothing ->
+                        text "Gradient unavailable"
         ]
