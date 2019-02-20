@@ -104,43 +104,39 @@ update msg model =
             ( model, Cmd.none )
 
         Navigate nav ->
-            let
-                current =
-                    case nav of
-                        Next ->
-                            if model.current < List.length model.palettes - 1 then
-                                model.current + 1
-
-                            else
-                                0
-
-                        Previous ->
-                            model.current - 1
-
-                        Jump index ->
-                            index
-            in
-            ( { model | current = current }, Cmd.none )
+            ( { model
+                | current = navigateList model.palettes model.current nav
+              }
+            , Cmd.none
+            )
 
         Ignore ->
             ( model, Cmd.none )
 
 
-navigatePalettes : Index -> Navigation -> List a -> Index
-navigatePalettes current nav palettes =
+navigateList : List a -> Index -> Navigation -> Index
+navigateList xs current nav =
     case nav of
         Next ->
-            if current < List.length palettes - 1 then
+            if current < List.length xs - 1 then
                 current + 1
 
             else
                 0
 
         Previous ->
-            current - 1
+            if current > 0 then
+                current - 1
+
+            else
+                List.length xs - 1
 
         Jump index ->
-            index
+            if index >= 0 && index < List.length xs - 1 then
+                index
+
+            else
+                current
 
 
 keyDecoder : Decode.Decoder Msg
