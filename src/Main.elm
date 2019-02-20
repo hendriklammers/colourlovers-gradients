@@ -146,7 +146,7 @@ navigateList xs current nav =
                 List.length xs - 1
 
         Jump index ->
-            if index >= 0 && index < List.length xs - 1 then
+            if index >= 0 && index < List.length xs then
                 index
 
             else
