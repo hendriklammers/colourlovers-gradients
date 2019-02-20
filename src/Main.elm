@@ -40,8 +40,15 @@ type alias Palette =
     }
 
 
+type alias ColorStop =
+    ( Color, Float )
+
+
 type alias Gradient =
-    List ( Color, Float )
+    { stop1 : ColorStop
+    , stop2 : ColorStop
+    , stopsList : List ColorStop
+    }
 
 
 type Msg
@@ -172,31 +179,31 @@ globalStyles =
 
 
 viewGradient : Gradient -> Html Msg
-viewGradient colors =
-    case colors of
-        ( c1, w1 ) :: ( c2, w2 ) :: xs ->
-            let
-                gradient =
-                    C.linearGradient2
-                        (C.deg 90)
-                        (C.stop2 (C.hex c1) (C.pct w1))
-                        (C.stop2 (C.hex c2) (C.pct w2))
-                        (List.map (\( c, w ) -> C.stop2 (C.hex c) (C.pct w)) xs)
-            in
-            div
-                [ css
-                    [ C.flex (C.int 1)
-                    , C.backgroundImage gradient
-                    ]
-                ]
-                []
+viewGradient { stop1, stop2, stopsList } =
+    let
+        colorStop ( color, percentage ) =
+            C.stop2
+                (C.hex <| color)
+                (C.pct <| percentage)
 
-        _ ->
-            text "Gradient consists of at least 2 colors"
+        gradient =
+            C.linearGradient2
+                (C.deg 90)
+                (colorStop stop1)
+                (colorStop stop2)
+                (List.map colorStop stopsList)
+    in
+    div
+        [ css
+            [ C.flex (C.int 1)
+            , C.backgroundImage gradient
+            ]
+        ]
+        []
 
 
-colorStop : List ( Color, Float ) -> Float -> Float
-colorStop gradient width =
+widthToPercentage : List ColorStop -> Float -> Float
+widthToPercentage gradient width =
     case gradient of
         ( _, previousWidth ) :: xs ->
             previousWidth + width * 100
@@ -205,13 +212,24 @@ colorStop gradient width =
             0
 
 
-paletteToGradient : Palette -> Gradient
+paletteToGradient : Palette -> Maybe Gradient
 paletteToGradient { colors, widths } =
-    List.map2 Tuple.pair colors (0 :: widths)
-        |> List.foldl
-            (\( color, width ) xs -> ( color, colorStop xs width ) :: xs)
-            []
-        |> List.reverse
+    let
+        colorStops =
+            List.map2 Tuple.pair colors (0 :: widths)
+                |> List.foldl
+                    (\( color, width ) xs ->
+                        ( color, widthToPercentage xs width ) :: xs
+                    )
+                    []
+                |> List.reverse
+    in
+    case colorStops of
+        s1 :: s2 :: xs ->
+            Just (Gradient s1 s2 xs)
+
+        _ ->
+            Nothing
 
 
 getPalette : Index -> List Palette -> Maybe Palette
@@ -253,12 +271,8 @@ view model =
                 viewError message
 
             GradientView palettes current ->
-                case getPalette current palettes of
-                    Just palette ->
-                        palette
-                            |> paletteToGradient
-                            |> viewGradient
-
-                    Nothing ->
-                        text "Gradient unavailable"
+                getPalette current palettes
+                    |> Maybe.andThen paletteToGradient
+                    |> Maybe.map viewGradient
+                    |> Maybe.withDefault (text "Unable to show gradient")
         ]
