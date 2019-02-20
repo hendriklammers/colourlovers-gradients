@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Events exposing (onKeyUp)
 import Css as C
-import Css.Global exposing (body, global)
+import Css.Global exposing (body, global, html, selector)
 import Html.Styled exposing (Html, div, li, text, toUnstyled, ul)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
@@ -189,6 +189,10 @@ globalStyles =
             , C.height (C.vh 100)
             , C.displayFlex
             ]
+        , html
+            [ C.boxSizing C.borderBox ]
+        , selector "*, *:before, *:after"
+            [ C.boxSizing C.inherit ]
         ]
 
 
@@ -274,21 +278,32 @@ viewColor color width =
         []
 
 
-viewPalette : Index -> Palette -> Html Msg
-viewPalette index { colors, widths } =
+viewPalette : Index -> Index -> Palette -> Html Msg
+viewPalette current index { colors, widths } =
+    let
+        activeStyles =
+            if current == index then
+                C.batch
+                    [ C.border3 (C.px 5) C.solid (C.hex "fff")
+                    ]
+
+            else
+                C.batch []
+    in
     li
         [ css
             [ C.displayFlex
             , C.height (C.px 150)
             , C.cursor C.pointer
+            , activeStyles
             ]
         , onClick (Navigate (Jump index))
         ]
         (List.map2 viewColor colors widths)
 
 
-viewPalettes : List Palette -> Html Msg
-viewPalettes palettes =
+viewPalettes : Index -> List Palette -> Html Msg
+viewPalettes current palettes =
     div
         [ css
             [ C.flex3 (C.int 0) (C.int 0) (C.px 150)
@@ -303,7 +318,7 @@ viewPalettes palettes =
                 , C.listStyle C.none
                 ]
             ]
-            (List.indexedMap viewPalette palettes)
+            (List.indexedMap (viewPalette current) palettes)
         ]
 
 
@@ -321,5 +336,5 @@ view { palettes, current, angle, error } =
             |> Maybe.andThen paletteToGradient
             |> Maybe.map (viewGradient angle)
             |> Maybe.withDefault (text "Unable to show gradient")
-        , viewPalettes palettes
+        , viewPalettes current palettes
         ]
