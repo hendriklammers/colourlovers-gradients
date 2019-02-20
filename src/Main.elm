@@ -23,6 +23,7 @@ main =
 type Model
     = LoadingView
     | GradientView (List Palette) Index
+    | ErrorView String
 
 
 type alias Color =
@@ -91,12 +92,10 @@ update msg model =
             , Cmd.none
             )
 
-        ReceivePalettes (Err err) ->
-            let
-                log =
-                    Debug.log "error" err
-            in
-            ( model, Cmd.none )
+        ReceivePalettes (Err _) ->
+            ( ErrorView "Unable to load the color palettes from the server"
+            , Cmd.none
+            )
 
         Navigate nav ->
             ( case model of
@@ -227,6 +226,11 @@ viewLoading =
     text "Loading color palettes"
 
 
+viewError : String -> Html Msg
+viewError message =
+    text message
+
+
 viewContainer : List (Html Msg) -> Html Msg
 viewContainer children =
     div
@@ -244,6 +248,9 @@ view model =
         [ case model of
             LoadingView ->
                 viewLoading
+
+            ErrorView message ->
+                viewError message
 
             GradientView palettes current ->
                 case getPalette current palettes of
