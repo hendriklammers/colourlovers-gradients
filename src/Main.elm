@@ -24,6 +24,7 @@ type alias Model =
     { palettes : List Palette
     , current : Index
     , error : Maybe String
+    , angle : Float
     }
 
 
@@ -55,6 +56,7 @@ type alias Gradient =
 type Msg
     = ReceivePalettes (Result Http.Error (List Palette))
     | Navigate Navigation
+    | Rotate Float
     | Ignore
 
 
@@ -69,6 +71,7 @@ init _ =
     ( { palettes = []
       , current = 0
       , error = Nothing
+      , angle = 0
       }
     , getPalettes
     )
@@ -99,9 +102,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ReceivePalettes (Ok palettes) ->
-            ( Model palettes 0 Nothing
-            , Cmd.none
-            )
+            ( { model | palettes = palettes }, Cmd.none )
 
         ReceivePalettes (Err _) ->
             ( { model
@@ -118,6 +119,9 @@ update msg model =
               }
             , Cmd.none
             )
+
+        Rotate angle ->
+            ( { model | angle = model.angle + angle }, Cmd.none )
 
         Ignore ->
             ( model, Cmd.none )
@@ -159,6 +163,12 @@ keyDecoder =
                 "ArrowLeft" ->
                     Navigate Previous
 
+                "ArrowUp" ->
+                    Rotate -90
+
+                "ArrowDown" ->
+                    Rotate 90
+
                 _ ->
                     Ignore
         )
@@ -181,8 +191,8 @@ globalStyles =
         ]
 
 
-viewGradient : Gradient -> Html Msg
-viewGradient { stop1, stop2, stopsList } =
+viewGradient : Float -> Gradient -> Html Msg
+viewGradient angle { stop1, stop2, stopsList } =
     let
         colorStop ( color, percentage ) =
             C.stop2
@@ -191,7 +201,7 @@ viewGradient { stop1, stop2, stopsList } =
 
         gradient =
             C.linearGradient2
-                (C.deg 90)
+                (C.deg angle)
                 (colorStop stop1)
                 (colorStop stop2)
                 (List.map colorStop stopsList)
@@ -274,6 +284,6 @@ view model =
         [ viewError model.error
         , getPalette model.current model.palettes
             |> Maybe.andThen paletteToGradient
-            |> Maybe.map viewGradient
+            |> Maybe.map (viewGradient model.angle)
             |> Maybe.withDefault (text "Unable to show gradient")
         ]
