@@ -22,12 +22,16 @@ main =
 
 type alias Model =
     { palettes : List Palette
-    , current : Int
+    , current : Index
     }
 
 
 type alias Color =
     String
+
+
+type alias Index =
+    Int
 
 
 type alias Palette =
@@ -49,7 +53,7 @@ type Msg
 type Navigation
     = Next
     | Previous
-    | Index Int
+    | Jump Index
 
 
 init : () -> ( Model, Cmd Msg )
@@ -113,7 +117,7 @@ update msg model =
                         Previous ->
                             model.current - 1
 
-                        Index index ->
+                        Jump index ->
                             index
             in
             ( { model | current = current }, Cmd.none )
@@ -122,7 +126,7 @@ update msg model =
             ( model, Cmd.none )
 
 
-navigatePalettes : Int -> Navigation -> List a -> Int
+navigatePalettes : Index -> Navigation -> List a -> Index
 navigatePalettes current nav palettes =
     case nav of
         Next ->
@@ -135,7 +139,7 @@ navigatePalettes current nav palettes =
         Previous ->
             current - 1
 
-        Index index ->
+        Jump index ->
             index
 
 
@@ -215,7 +219,7 @@ paletteToGradient { colors, widths } =
         |> List.reverse
 
 
-getPalette : Int -> List Palette -> Maybe Palette
+getPalette : Index -> List Palette -> Maybe Palette
 getPalette index palettes =
     palettes
         |> List.drop index
