@@ -4,8 +4,9 @@
   "description": "Color palettes from Colourlovers as CSS gradients",
   "main": "index.js",
   "scripts": {
-    "start": "elm-typescript-interop && webpack-dev-server",
-    "build": "elm-typescript-interop && webpack -p"
+    "start": "webpack-dev-server",
+    "build": "webpack -p",
+    "types": "elm-typescript-interop"
   },
   "keywords": [],
   "author": "Hendrik Lammers <lammers@gmail.com> (http://www.hendriklammers.com)",
@@ -30,5 +31,9 @@
     "webpack-cli": "^3.2.3",
     "webpack-dev-server": "^3.2.0",
     "webpack-merge": "^4.2.1"
+  },
+  "dependencies": {
+    "@types/clipboard": "^2.0.1",
+    "clipboard": "^2.0.4"
   }
 }

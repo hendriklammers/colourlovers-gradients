@@ -5,7 +5,7 @@ import Browser.Events exposing (onKeyUp)
 import Css as C
 import Css.Global exposing (body, global, html, selector)
 import Html.Styled exposing (Html, div, li, text, toUnstyled, ul)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled.Attributes exposing (attribute, css, id)
 import Html.Styled.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder)
@@ -81,7 +81,7 @@ init _ =
 getPalettes : Cmd Msg
 getPalettes =
     Http.get
-        -- { url = "https://cors-anywhere.herokuapp.com/http://www.colourlovers.com/api/palettes/top?format=json"
+        -- { url = "https://cors-anywhere.herokuapp.com/http://www.colourlovers.com/api/palettes/top?format=json&showPaletteWidths=1"
         { url = "/data/palettes.json"
         , expect = Http.expectJson ReceivePalettes paletteListDecoder
         }
@@ -210,9 +210,14 @@ viewGradient angle { stop1, stop2, stopsList } =
                 (colorStop stop1)
                 (colorStop stop2)
                 (List.map colorStop stopsList)
+
+        cssString =
+            "background-image: " ++ gradient.value ++ ";"
     in
     div
-        [ css
+        [ id "gradient"
+        , attribute "data-clipboard-text" cssString
+        , css
             [ C.flex (C.int 1)
             , C.backgroundImage gradient
             ]
