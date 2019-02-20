@@ -4,8 +4,9 @@ import Browser
 import Browser.Events exposing (onKeyUp)
 import Css as C
 import Css.Global exposing (body, global)
-import Html.Styled exposing (Html, div, text, toUnstyled)
+import Html.Styled exposing (Html, div, li, text, toUnstyled, ul)
 import Html.Styled.Attributes exposing (css)
+import Html.Styled.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder)
 
@@ -71,7 +72,7 @@ init _ =
     ( { palettes = []
       , current = 0
       , error = Nothing
-      , angle = 0
+      , angle = 90
       }
     , getPalettes
     )
@@ -252,11 +253,6 @@ getPalette index palettes =
         |> List.head
 
 
-viewLoading : Html Msg
-viewLoading =
-    text "Loading color palettes"
-
-
 viewError : Maybe String -> Html Msg
 viewError error =
     case error of
@@ -267,23 +263,63 @@ viewError error =
             text ""
 
 
-viewContainer : List (Html Msg) -> Html Msg
-viewContainer children =
+viewColor : Color -> Float -> Html Msg
+viewColor color width =
+    div
+        [ css
+            [ C.flex3 (C.int 0) (C.int 0) (C.pct (width * 100))
+            , C.backgroundColor (C.hex color)
+            ]
+        ]
+        []
+
+
+viewPalette : Index -> Palette -> Html Msg
+viewPalette index { colors, widths } =
+    li
+        [ css
+            [ C.displayFlex
+            , C.height (C.px 150)
+            , C.cursor C.pointer
+            ]
+        , onClick (Navigate (Jump index))
+        ]
+        (List.map2 viewColor colors widths)
+
+
+viewPalettes : List Palette -> Html Msg
+viewPalettes palettes =
+    div
+        [ css
+            [ C.flex3 (C.int 0) (C.int 0) (C.px 150)
+            , C.backgroundColor (C.hex "000")
+            , C.overflowY C.scroll
+            ]
+        ]
+        [ ul
+            [ css
+                [ C.margin (C.px 0)
+                , C.padding (C.px 0)
+                , C.listStyle C.none
+                ]
+            ]
+            (List.indexedMap viewPalette palettes)
+        ]
+
+
+view : Model -> Html Msg
+view { palettes, current, angle, error } =
     div
         [ css
             [ C.flex (C.int 1)
             , C.displayFlex
             ]
         ]
-        (globalStyles :: children)
-
-
-view : Model -> Html Msg
-view model =
-    viewContainer
-        [ viewError model.error
-        , getPalette model.current model.palettes
+        [ globalStyles
+        , viewError error
+        , getPalette current palettes
             |> Maybe.andThen paletteToGradient
-            |> Maybe.map (viewGradient model.angle)
+            |> Maybe.map (viewGradient angle)
             |> Maybe.withDefault (text "Unable to show gradient")
+        , viewPalettes palettes
         ]
