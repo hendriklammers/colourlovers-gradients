@@ -6,7 +6,9 @@ export namespace Elm {
   namespace Main {
     export interface App {
       ports: {
-        
+        confirmCopy: {
+          send(data: [boolean, string]): void
+        }
       };
     }
     export function init(options: {

@@ -60,7 +60,7 @@ type Msg
     = ReceivePalettes (Result Http.Error (List Palette))
     | Navigate Navigation
     | Rotate Float
-    | ClipboardCopy Bool
+    | ClipboardCopy ( Bool, String )
     | Ignore
 
 
@@ -137,10 +137,10 @@ update msg model =
         Rotate angle ->
             ( { model | angle = model.angle + angle }, Cmd.none )
 
-        ClipboardCopy success ->
+        ClipboardCopy ( success, value ) ->
             let
                 log =
-                    Debug.log "copied" success
+                    Debug.log "copied" value
             in
             ( model, Cmd.none )
 

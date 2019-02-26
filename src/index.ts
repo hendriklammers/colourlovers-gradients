@@ -7,3 +7,9 @@ const app = Elm.Main.init({
 })
 
 const clipboard = new Clipboard('#gradient')
+clipboard.on('success', ({ text }) => {
+  app.ports.confirmCopy.send([true, text])
+})
+clipboard.on('error', ({ text }) => {
+  app.ports.confirmCopy.send([false, text])
+})
