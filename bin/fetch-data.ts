@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import fs from 'fs'
+import path from 'path'
 import axios from 'axios'
 
 // Only interested in colors and colorWidths fields for now
@@ -16,7 +18,7 @@ interface ServerData {
 }
 
 const TOTAL = 100
-const PAGE_SIZE = 10
+const PAGE_SIZE = 100
 
 const dataToPalette = (data: ServerData[]): Palette[] => {
   return data.map(({ colors, colorWidths }) => ({
@@ -49,8 +51,10 @@ const getData = async (offset = 0): Promise<any[]> => {
 
 const main = async () => {
   try {
-    const result = await getData()
-    console.log(result.length)
+    const palettes: Palette[] = await getData()
+    const file = path.resolve(__dirname, '../data/palettes.json')
+    await fs.writeFileSync(file, JSON.stringify(palettes), 'utf8')
+    console.log(`Saved ${palettes.length} color palettes in ${file}`)
   } catch (err) {
     console.error(err)
   }
