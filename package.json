@@ -2,6 +2,7 @@
   "name": "colourlovers-gradients",
   "version": "1.0.0",
   "description": "Color palettes from Colourlovers as CSS gradients",
+  "repository": "github:hendriklammers/colourlovers-gradients",
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server",
