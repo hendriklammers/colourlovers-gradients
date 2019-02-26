@@ -17,8 +17,10 @@ interface ServerData {
   url: string
 }
 
-const TOTAL = 100
-const PAGE_SIZE = 100
+const TOTAL = Number(process.argv[2]) || 1000
+const PAGE_SIZE = TOTAL < 100 ? TOTAL : 100
+// const pages = Math.floor(TOTAL / PAGE_SIZE)
+// const rest = TOTAL % PAGE_SIZE
 
 const dataToPalette = (data: ServerData[]): Palette[] => {
   return data.map(({ colors, colorWidths }) => ({
