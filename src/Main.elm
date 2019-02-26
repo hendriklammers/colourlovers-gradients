@@ -9,6 +9,8 @@ import Html.Styled.Attributes exposing (attribute, css, id)
 import Html.Styled.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder)
+import Ports exposing (confirmCopy)
+import Random
 
 
 main : Program () Model Msg
@@ -58,6 +60,7 @@ type Msg
     = ReceivePalettes (Result Http.Error (List Palette))
     | Navigate Navigation
     | Rotate Float
+    | ClipboardCopy Bool
     | Ignore
 
 
@@ -65,6 +68,7 @@ type Navigation
     = Next
     | Previous
     | Jump Index
+    | Random
 
 
 init : () -> ( Model, Cmd Msg )
@@ -114,15 +118,31 @@ update msg model =
             )
 
         Navigate nav ->
-            ( { model
-                | current =
-                    navigateList model.palettes model.current nav
-              }
-            , Cmd.none
-            )
+            case nav of
+                Random ->
+                    ( model
+                    , Random.generate
+                        (\index -> Navigate (Jump index))
+                        (Random.int 0 (List.length model.palettes))
+                    )
+
+                _ ->
+                    ( { model
+                        | current =
+                            navigateList model.palettes model.current nav
+                      }
+                    , Cmd.none
+                    )
 
         Rotate angle ->
             ( { model | angle = model.angle + angle }, Cmd.none )
+
+        ClipboardCopy success ->
+            let
+                log =
+                    Debug.log "copied" success
+            in
+            ( model, Cmd.none )
 
         Ignore ->
             ( model, Cmd.none )
@@ -152,6 +172,9 @@ navigateList xs current nav =
             else
                 current
 
+        _ ->
+            current
+
 
 keyDecoder : Decode.Decoder Msg
 keyDecoder =
@@ -170,6 +193,9 @@ keyDecoder =
                 "ArrowDown" ->
                     Rotate 90
 
+                "Enter" ->
+                    Navigate Random
+
                 _ ->
                     Ignore
         )
@@ -178,7 +204,10 @@ keyDecoder =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    onKeyUp keyDecoder
+    Sub.batch
+        [ onKeyUp keyDecoder
+        , confirmCopy ClipboardCopy
+        ]
 
 
 globalStyles : Html Msg
