@@ -8,7 +8,7 @@
     "start": "webpack-dev-server",
     "build": "webpack -p",
     "types": "elm-typescript-interop",
-    "fetch-data": "ts-node ./bin/fetch-data.ts"
+    "fetch-data": "ts-node ./bin/fetch-data.ts 100"
   },
   "keywords": [],
   "author": "Hendrik Lammers <lammers@gmail.com> (http://www.hendriklammers.com)",
