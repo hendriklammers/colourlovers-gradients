@@ -12,6 +12,7 @@ import Http
 import Json.Decode as Decode exposing (Decoder)
 import Ports exposing (confirmCopy)
 import Random
+import RemoteData exposing (WebData)
 
 
 main : Program () Model Msg
@@ -25,9 +26,8 @@ main =
 
 
 type alias Model =
-    { palettes : List Palette
+    { data : WebData (List Palette)
     , current : Index
-    , error : Maybe String
     , angle : Float
     }
 
@@ -58,7 +58,7 @@ type alias Gradient =
 
 
 type Msg
-    = ReceivePalettes (Result Http.Error (List Palette))
+    = ReceivePalettes (WebData (List Palette))
     | Navigate Navigation
     | Rotate Float
     | ClipboardCopy ( Bool, String )
@@ -74,9 +74,8 @@ type Navigation
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { palettes = []
+    ( { data = RemoteData.Loading
       , current = 0
-      , error = Nothing
       , angle = 90
       }
     , getPalettes
@@ -88,7 +87,10 @@ getPalettes =
     Http.get
         -- { url = "https://cors-anywhere.herokuapp.com/http://www.colourlovers.com/api/palettes/top?format=json&showPaletteWidths=1"
         { url = "/data/palettes.json"
-        , expect = Http.expectJson ReceivePalettes paletteListDecoder
+        , expect =
+            Http.expectJson
+                (RemoteData.fromResult >> ReceivePalettes)
+                paletteListDecoder
         }
 
 
@@ -107,33 +109,30 @@ paletteListDecoder =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ReceivePalettes (Ok palettes) ->
-            ( { model | palettes = palettes }, Cmd.none )
-
-        ReceivePalettes (Err _) ->
-            ( { model
-                | error =
-                    Just "Unable to load the color palettes from the server"
-              }
-            , Cmd.none
-            )
+        ReceivePalettes data ->
+            ( { model | data = data }, Cmd.none )
 
         Navigate nav ->
-            case nav of
-                Random ->
-                    ( model
-                    , Random.generate
-                        (\index -> Navigate (Jump index))
-                        (Random.int 0 (List.length model.palettes))
-                    )
+            case model.data of
+                RemoteData.Success palettes ->
+                    case nav of
+                        Random ->
+                            ( model
+                            , Random.generate
+                                (\index -> Navigate (Jump index))
+                                (Random.int 0 (List.length palettes))
+                            )
+
+                        _ ->
+                            ( { model
+                                | current =
+                                    navigateList palettes model.current nav
+                              }
+                            , Cmd.none
+                            )
 
                 _ ->
-                    ( { model
-                        | current =
-                            navigateList model.palettes model.current nav
-                      }
-                    , Cmd.none
-                    )
+                    ( model, Cmd.none )
 
         Rotate angle ->
             ( { model | angle = model.angle + angle }, Cmd.none )
@@ -441,19 +440,29 @@ viewPreloader =
 
 
 view : Model -> Html Msg
-view { palettes, current, angle, error } =
+view { current, angle, data } =
     div
         [ css
             [ C.flex <| C.int 1
             , C.displayFlex
             ]
         ]
-        [ globalStyles
-        , viewPreloader
+        (globalStyles
+            :: (case data of
+                    RemoteData.NotAsked ->
+                        []
 
-        -- , viewError error
-        -- , getPalette current palettes
-        --     |> Maybe.andThen paletteToGradient
-        --     |> viewGradient angle
-        -- , viewPalettes current palettes
-        ]
+                    RemoteData.Loading ->
+                        [ viewPreloader ]
+
+                    RemoteData.Failure err ->
+                        [ text "Unable to load the color palettes from the server" ]
+
+                    RemoteData.Success palettes ->
+                        [ getPalette current palettes
+                            |> Maybe.andThen paletteToGradient
+                            |> viewGradient angle
+                        , viewPalettes current palettes
+                        ]
+               )
+        )
