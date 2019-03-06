@@ -3,6 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Events exposing (onKeyUp)
 import Css as C
+import Css.Animations as A
 import Css.Global exposing (body, global, html, selector)
 import Html.Styled exposing (Html, div, li, text, toUnstyled, ul)
 import Html.Styled.Attributes exposing (attribute, css, id)
@@ -369,6 +370,7 @@ viewPalettes current palettes =
             div
                 [ css
                     [ C.flex3 (C.int 0) (C.int 0) (C.px 150)
+                    , C.marginLeft C.auto
                     , C.backgroundColor <| C.hex "fff"
                     , C.overflowY C.scroll
                     ]
@@ -384,6 +386,60 @@ viewPalettes current palettes =
                 ]
 
 
+viewPreloader : Html Msg
+viewPreloader =
+    let
+        animation =
+            A.keyframes
+                [ ( 0, [ A.transform [ C.scaleY 1.0 ] ] )
+                , ( 20, [ A.transform [ C.scaleY 0.6 ] ] )
+                , ( 40, [ A.transform [ C.scaleY 1.0 ] ] )
+                , ( 100, [ A.transform [ C.scaleY 1.0 ] ] )
+                ]
+
+        barStyle =
+            C.batch
+                [ C.width <| C.px 12
+                , C.height <| C.px 60
+                , C.animationName animation
+                , C.animationDuration <| C.ms 1300
+                , C.property "animation-iteration-count" "infinite"
+                , C.property "animation-timing-function" "ease-in-out"
+                ]
+    in
+    div
+        [ css
+            [ C.displayFlex
+            , C.flex <| C.int 1
+            , C.alignItems C.center
+            , C.justifyContent C.center
+            ]
+        ]
+        [ div
+            [ css
+                [ C.displayFlex ]
+            ]
+            (List.indexedMap
+                (\i color ->
+                    div
+                        [ css
+                            [ barStyle
+                            , C.animationDelay <| C.ms (toFloat i * 100)
+                            , C.backgroundColor <| C.hex color
+                            ]
+                        ]
+                        []
+                )
+                [ "F8B195"
+                , "F67280"
+                , "C06C84"
+                , "6C5B7B"
+                , "355C7D"
+                ]
+            )
+        ]
+
+
 view : Model -> Html Msg
 view { palettes, current, angle, error } =
     div
@@ -393,9 +449,11 @@ view { palettes, current, angle, error } =
             ]
         ]
         [ globalStyles
-        , viewError error
-        , getPalette current palettes
-            |> Maybe.andThen paletteToGradient
-            |> viewGradient angle
-        , viewPalettes current palettes
+        , viewPreloader
+
+        -- , viewError error
+        -- , getPalette current palettes
+        --     |> Maybe.andThen paletteToGradient
+        --     |> viewGradient angle
+        -- , viewPalettes current palettes
         ]
