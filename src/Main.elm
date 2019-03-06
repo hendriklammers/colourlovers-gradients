@@ -225,33 +225,45 @@ globalStyles =
         ]
 
 
-viewGradient : Float -> Gradient -> Html Msg
-viewGradient angle { stop1, stop2, stopsList } =
-    let
-        colorStop ( color, percentage ) =
-            C.stop2
-                (C.hex <| color)
-                (C.pct <| percentage)
-
-        gradient =
-            C.linearGradient2
-                (C.deg angle)
-                (colorStop stop1)
-                (colorStop stop2)
-                (List.map colorStop stopsList)
-
-        cssString =
-            "background-image: " ++ gradient.value ++ ";"
-    in
+viewGradient : Float -> Maybe Gradient -> Html Msg
+viewGradient angle gradient =
     div
-        [ id "gradient"
-        , attribute "data-clipboard-text" cssString
-        , css
-            [ C.flex (C.int 1)
-            , C.backgroundImage gradient
+        [ css
+            [ C.displayFlex
+            , C.flex <| C.int 1
             ]
         ]
-        []
+        [ case gradient of
+            Nothing ->
+                text "Unable to show gradient"
+
+            Just { stop1, stop2, stopsList } ->
+                let
+                    colorStop ( color, percentage ) =
+                        C.stop2
+                            (C.hex <| color)
+                            (C.pct <| percentage)
+
+                    background =
+                        C.linearGradient2
+                            (C.deg angle)
+                            (colorStop stop1)
+                            (colorStop stop2)
+                            (List.map colorStop stopsList)
+
+                    cssString =
+                        "background-image: " ++ background.value ++ ";"
+                in
+                div
+                    [ id "gradient"
+                    , attribute "data-clipboard-text" cssString
+                    , css
+                        [ C.flex <| C.int 1
+                        , C.backgroundImage background
+                        ]
+                    ]
+                    []
+        ]
 
 
 widthToPercentage : List ColorStop -> Float -> Float
@@ -322,11 +334,11 @@ viewPalette current index { colors, widths } =
                         [ C.display C.block
                         , C.property "content" "''"
                         , C.position C.absolute
-                        , C.left (C.px 0)
-                        , C.top (C.px 0)
-                        , C.width (C.pct 100)
-                        , C.height (C.pct 100)
-                        , C.zIndex (C.int 2)
+                        , C.left <| C.px 0
+                        , C.top <| C.px 0
+                        , C.width <| C.pct 100
+                        , C.height <| C.pct 100
+                        , C.zIndex <| C.int 2
                         , C.border3 (C.px 5) C.solid (C.hex "fff")
                         ]
                     ]
@@ -338,7 +350,7 @@ viewPalette current index { colors, widths } =
         [ css
             [ C.displayFlex
             , C.position C.relative
-            , C.height (C.px 150)
+            , C.height <| C.px 150
             , C.cursor C.pointer
             , activeStyles
             ]
@@ -349,29 +361,34 @@ viewPalette current index { colors, widths } =
 
 viewPalettes : Index -> List Palette -> Html Msg
 viewPalettes current palettes =
-    div
-        [ css
-            [ C.flex3 (C.int 0) (C.int 0) (C.px 150)
-            , C.backgroundColor (C.hex "000")
-            , C.overflowY C.scroll
-            ]
-        ]
-        [ ul
-            [ css
-                [ C.margin (C.px 0)
-                , C.padding (C.px 0)
-                , C.listStyle C.none
+    case palettes of
+        [] ->
+            text ""
+
+        _ ->
+            div
+                [ css
+                    [ C.flex3 (C.int 0) (C.int 0) (C.px 150)
+                    , C.backgroundColor <| C.hex "fff"
+                    , C.overflowY C.scroll
+                    ]
                 ]
-            ]
-            (List.indexedMap (viewPalette current) palettes)
-        ]
+                [ ul
+                    [ css
+                        [ C.margin <| C.px 0
+                        , C.padding <| C.px 0
+                        , C.listStyle C.none
+                        ]
+                    ]
+                    (List.indexedMap (viewPalette current) palettes)
+                ]
 
 
 view : Model -> Html Msg
 view { palettes, current, angle, error } =
     div
         [ css
-            [ C.flex (C.int 1)
+            [ C.flex <| C.int 1
             , C.displayFlex
             ]
         ]
@@ -379,7 +396,6 @@ view { palettes, current, angle, error } =
         , viewError error
         , getPalette current palettes
             |> Maybe.andThen paletteToGradient
-            |> Maybe.map (viewGradient angle)
-            |> Maybe.withDefault (text "Unable to show gradient")
+            |> viewGradient angle
         , viewPalettes current palettes
         ]
