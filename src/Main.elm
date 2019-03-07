@@ -11,8 +11,11 @@ import Html.Styled.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder)
 import Ports exposing (confirmCopy)
+import Process
 import Random
 import RemoteData exposing (WebData)
+import Task
+import Time
 
 
 main : Program () Model Msg
@@ -58,11 +61,12 @@ type alias Gradient =
 
 
 type Msg
-    = ReceivePalettes (WebData (List Palette))
+    = ReceiveData (WebData (List Palette))
     | Navigate Navigation
     | Rotate Float
     | ClipboardCopy ( Bool, String )
     | Ignore
+    | Delay Float Msg
 
 
 type Navigation
@@ -89,7 +93,7 @@ getPalettes =
         { url = "/data/palettes.json"
         , expect =
             Http.expectJson
-                (RemoteData.fromResult >> ReceivePalettes)
+                (RemoteData.fromResult >> (ReceiveData >> Delay 1000))
                 paletteListDecoder
         }
 
@@ -106,30 +110,29 @@ paletteListDecoder =
     Decode.list paletteDecoder
 
 
+delay : Float -> Msg -> Cmd Msg
+delay time msg =
+    Process.sleep time
+        |> Task.perform (\_ -> msg)
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ReceivePalettes data ->
+        Delay time message ->
+            ( model, delay time message )
+
+        ReceiveData data ->
             ( { model | data = data }, Cmd.none )
 
         Navigate nav ->
             case model.data of
                 RemoteData.Success palettes ->
-                    case nav of
-                        Random ->
-                            ( model
-                            , Random.generate
-                                (\index -> Navigate (Jump index))
-                                (Random.int 0 (List.length palettes))
-                            )
-
-                        _ ->
-                            ( { model
-                                | current =
-                                    navigateList palettes model.current nav
-                              }
-                            , Cmd.none
-                            )
+                    let
+                        ( current, cmd ) =
+                            navigate palettes model.current nav
+                    in
+                    ( { model | current = current }, cmd )
 
                 _ ->
                     ( model, Cmd.none )
@@ -148,32 +151,46 @@ update msg model =
             ( model, Cmd.none )
 
 
-navigateList : List a -> Index -> Navigation -> Index
-navigateList xs current nav =
-    case nav of
-        Next ->
-            if current < List.length xs - 1 then
-                current + 1
+navigate : List a -> Index -> Navigation -> ( Index, Cmd Msg )
+navigate xs current nav =
+    let
+        index =
+            case nav of
+                Next ->
+                    if current < List.length xs - 1 then
+                        current + 1
 
-            else
-                0
+                    else
+                        0
 
-        Previous ->
-            if current > 0 then
-                current - 1
+                Previous ->
+                    if current > 0 then
+                        current - 1
 
-            else
-                List.length xs - 1
+                    else
+                        List.length xs - 1
 
-        Jump index ->
-            if index >= 0 && index < List.length xs then
-                index
+                Jump i ->
+                    if i >= 0 && i < List.length xs then
+                        i
 
-            else
-                current
+                    else
+                        current
 
-        _ ->
-            current
+                Random ->
+                    current
+
+        cmd =
+            case nav of
+                Random ->
+                    Random.generate
+                        (\i -> Navigate (Jump i))
+                        (Random.int 0 (List.length xs))
+
+                _ ->
+                    Cmd.none
+    in
+    ( index, cmd )
 
 
 keyDecoder : Decode.Decoder Msg
