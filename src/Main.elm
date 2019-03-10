@@ -13,7 +13,6 @@ import Json.Decode as Decode exposing (Decoder)
 import Ports exposing (confirmCopy)
 import Process
 import Random
-import RemoteData exposing (WebData)
 import Task
 import Time
 
@@ -28,10 +27,16 @@ main =
         }
 
 
-type alias Model =
-    { data : WebData (List Palette)
+type Model
+    = Init
+    | Error String
+    | View GradientView
+
+
+type alias GradientView =
+    { palettes : List Palette
     , current : Index
-    , angle : Float
+    , gradient : Gradient
     }
 
 
@@ -57,11 +62,12 @@ type alias Gradient =
     { stop1 : ColorStop
     , stop2 : ColorStop
     , stopsList : List ColorStop
+    , angle : Float
     }
 
 
 type Msg
-    = ReceiveData (WebData (List Palette))
+    = ReceiveData (Result Http.Error (List Palette))
     | Navigate Navigation
     | Rotate Float
     | ClipboardCopy ( Bool, String )
@@ -78,10 +84,7 @@ type Navigation
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { data = RemoteData.Loading
-      , current = 0
-      , angle = 90
-      }
+    ( Init
     , getPalettes
     )
 
@@ -93,7 +96,7 @@ getPalettes =
         { url = "/data/palettes.json"
         , expect =
             Http.expectJson
-                (RemoteData.fromResult >> (ReceiveData >> Delay 1000))
+                (ReceiveData >> Delay 1000)
                 paletteListDecoder
         }
 
@@ -122,23 +125,60 @@ update msg model =
         Delay time message ->
             ( model, delay time message )
 
-        ReceiveData data ->
-            ( { model | data = data }, Cmd.none )
+        ReceiveData (Ok palettes) ->
+            case
+                palettes
+                    |> List.head
+                    |> Maybe.andThen paletteToGradient
+            of
+                Just gradient ->
+                    ( View (GradientView palettes 0 gradient), Cmd.none )
+
+                Nothing ->
+                    ( Error "Unable to show gradient", Cmd.none )
+
+        ReceiveData (Err _) ->
+            ( Error "Unable to load the color palettes from the server"
+            , Cmd.none
+            )
 
         Navigate nav ->
-            case model.data of
-                RemoteData.Success palettes ->
+            case model of
+                View gradientModel ->
                     let
                         ( current, cmd ) =
-                            navigate palettes model.current nav
+                            navigate gradientModel.palettes gradientModel.current nav
+
+                        gradient =
+                            getPalette current gradientModel.palettes
+                                |> Maybe.andThen paletteToGradient
                     in
-                    ( { model | current = current }, cmd )
+                    case gradient of
+                        Just g ->
+                            ( View { gradientModel | current = current, gradient = g }, cmd )
+
+                        Nothing ->
+                            ( Error "Unable to show gradient", Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         Rotate angle ->
-            ( { model | angle = model.angle + angle }, Cmd.none )
+            case model of
+                View gradientModel ->
+                    let
+                        gradient =
+                            gradientModel.gradient
+                    in
+                    ( View
+                        { gradientModel
+                            | gradient = { gradient | angle = gradient.angle + angle }
+                        }
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
 
         ClipboardCopy ( success, value ) ->
             let
@@ -242,44 +282,39 @@ globalStyles =
         ]
 
 
-viewGradient : Float -> Maybe Gradient -> Html Msg
-viewGradient angle gradient =
+viewGradient : Gradient -> Html Msg
+viewGradient { stop1, stop2, stopsList, angle } =
+    let
+        colorStop ( color, percentage ) =
+            C.stop2
+                (C.hex <| color)
+                (C.pct <| percentage)
+
+        background =
+            C.linearGradient2
+                (C.deg angle)
+                (colorStop stop1)
+                (colorStop stop2)
+                (List.map colorStop stopsList)
+
+        cssString =
+            "background-image: " ++ background.value ++ ";"
+    in
     div
         [ css
             [ C.displayFlex
             , C.flex <| C.int 1
             ]
         ]
-        [ case gradient of
-            Nothing ->
-                text "Unable to show gradient"
-
-            Just { stop1, stop2, stopsList } ->
-                let
-                    colorStop ( color, percentage ) =
-                        C.stop2
-                            (C.hex <| color)
-                            (C.pct <| percentage)
-
-                    background =
-                        C.linearGradient2
-                            (C.deg angle)
-                            (colorStop stop1)
-                            (colorStop stop2)
-                            (List.map colorStop stopsList)
-
-                    cssString =
-                        "background-image: " ++ background.value ++ ";"
-                in
-                div
-                    [ id "gradient"
-                    , attribute "data-clipboard-text" cssString
-                    , css
-                        [ C.flex <| C.int 1
-                        , C.backgroundImage background
-                        ]
-                    ]
-                    []
+        [ div
+            [ id "gradient"
+            , attribute "data-clipboard-text" cssString
+            , css
+                [ C.flex <| C.int 1
+                , C.backgroundImage background
+                ]
+            ]
+            []
         ]
 
 
@@ -307,7 +342,7 @@ paletteToGradient { colors, widths } =
     in
     case colorStops of
         s1 :: s2 :: xs ->
-            Just (Gradient s1 s2 xs)
+            Just (Gradient s1 s2 xs 0)
 
         _ ->
             Nothing
@@ -320,14 +355,9 @@ getPalette index palettes =
         |> List.head
 
 
-viewError : Maybe String -> Html Msg
-viewError error =
-    case error of
-        Just message ->
-            text message
-
-        Nothing ->
-            text ""
+viewError : String -> Html Msg
+viewError msg =
+    text msg
 
 
 viewColor : Color -> Float -> Html Msg
@@ -456,30 +486,28 @@ viewPreloader =
         ]
 
 
-view : Model -> Html Msg
-view { current, angle, data } =
+viewContainer : List (Html Msg) -> Html Msg
+viewContainer content =
     div
         [ css
             [ C.flex <| C.int 1
             , C.displayFlex
             ]
         ]
-        (globalStyles
-            :: (case data of
-                    RemoteData.NotAsked ->
-                        []
+        (globalStyles :: content)
 
-                    RemoteData.Loading ->
-                        [ viewPreloader ]
 
-                    RemoteData.Failure err ->
-                        [ text "Unable to load the color palettes from the server" ]
+view : Model -> Html Msg
+view model =
+    case model of
+        Init ->
+            viewContainer [ viewPreloader ]
 
-                    RemoteData.Success palettes ->
-                        [ getPalette current palettes
-                            |> Maybe.andThen paletteToGradient
-                            |> viewGradient angle
-                        , viewPalettes current palettes
-                        ]
-               )
-        )
+        Error msg ->
+            viewContainer [ viewError msg ]
+
+        View { current, palettes, gradient } ->
+            viewContainer
+                [ viewGradient gradient
+                , viewPalettes current palettes
+                ]
