@@ -113,20 +113,26 @@ delay time msg =
         |> Task.perform (\_ -> msg)
 
 
+selectGradient : Index -> List Palette -> Model
+selectGradient index palettes =
+    case
+        palettes
+            |> List.drop index
+            |> List.head
+            |> Maybe.andThen (paletteToGradient index)
+    of
+        Just gradient ->
+            Success palettes gradient
+
+        Nothing ->
+            Error "Unable to show gradient"
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
         ( ReceiveData (Ok palettes), Init ) ->
-            case
-                palettes
-                    |> List.head
-                    |> Maybe.andThen (paletteToGradient 0)
-            of
-                Just gradient ->
-                    ( Success palettes gradient, Cmd.none )
-
-                Nothing ->
-                    ( Error "Unable to show gradient", Cmd.none )
+            ( selectGradient 0 palettes, Cmd.none )
 
         ( ReceiveData (Err _), Init ) ->
             ( Error "Unable to load the color palettes from the server"
@@ -138,15 +144,7 @@ update msg model =
                 ( index, cmd ) =
                     navigate palettes gradient.index nav
             in
-            case
-                getPalette index palettes
-                    |> Maybe.andThen (paletteToGradient index)
-            of
-                Just g ->
-                    ( Success palettes g, cmd )
-
-                Nothing ->
-                    ( Error "Unable to show gradient", Cmd.none )
+            ( selectGradient index palettes, cmd )
 
         ( Rotate angle, Success palettes gradient ) ->
             ( Success palettes { gradient | angle = gradient.angle + angle }
@@ -322,13 +320,6 @@ paletteToGradient index { colors, widths } =
 
         _ ->
             Nothing
-
-
-getPalette : Index -> List Palette -> Maybe Palette
-getPalette index palettes =
-    palettes
-        |> List.drop index
-        |> List.head
 
 
 viewError : String -> Html Msg
