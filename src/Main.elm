@@ -5,7 +5,7 @@ import Browser.Events exposing (onKeyUp)
 import Css as C
 import Css.Animations as A
 import Css.Global exposing (body, global, html, selector)
-import Html.Styled exposing (Html, div, li, text, toUnstyled, ul)
+import Html.Styled exposing (Html, div, h3, li, p, text, toUnstyled, ul)
 import Html.Styled.Attributes exposing (attribute, css, id)
 import Html.Styled.Events exposing (onClick)
 import Http
@@ -87,7 +87,7 @@ getPalettes : Cmd Msg
 getPalettes =
     Http.get
         -- { url = "https://cors-anywhere.herokuapp.com/http://www.colourlovers.com/api/palettes/top?format=json&showPaletteWidths=1"
-        { url = "/data/palettes.json"
+        { url = "/data/paliettes.json"
         , expect =
             Http.expectJson
                 (ReceiveData >> Delay 1000)
@@ -134,7 +134,11 @@ update msg model =
         ( ReceiveData (Ok palettes), Init ) ->
             ( selectGradient 0 palettes, Cmd.none )
 
-        ( ReceiveData (Err _), Init ) ->
+        ( ReceiveData (Err err), Init ) ->
+            let
+                debug =
+                    Debug.log "Error" err
+            in
             ( Error "Unable to load the color palettes from the server"
             , Cmd.none
             )
@@ -167,44 +171,39 @@ update msg model =
 
 navigate : List a -> Index -> Navigation -> ( Index, Cmd Msg )
 navigate xs current nav =
-    let
-        index =
-            case nav of
-                Next ->
-                    if current < List.length xs - 1 then
-                        current + 1
+    ( case nav of
+        Next ->
+            if current < List.length xs - 1 then
+                current + 1
 
-                    else
-                        0
+            else
+                0
 
-                Previous ->
-                    if current > 0 then
-                        current - 1
+        Previous ->
+            if current > 0 then
+                current - 1
 
-                    else
-                        List.length xs - 1
+            else
+                List.length xs - 1
 
-                Jump i ->
-                    if i >= 0 && i < List.length xs then
-                        i
+        Jump i ->
+            if i >= 0 && i < List.length xs then
+                i
 
-                    else
-                        current
+            else
+                current
 
-                Random ->
-                    current
+        Random ->
+            current
+    , case nav of
+        Random ->
+            Random.generate
+                (\i -> Navigate (Jump i))
+                (Random.int 0 (List.length xs))
 
-        cmd =
-            case nav of
-                Random ->
-                    Random.generate
-                        (\i -> Navigate (Jump i))
-                        (Random.int 0 (List.length xs))
-
-                _ ->
-                    Cmd.none
-    in
-    ( index, cmd )
+        _ ->
+            Cmd.none
+    )
 
 
 keyDecoder : Decode.Decoder Msg
@@ -248,6 +247,13 @@ globalStyles =
             [ C.margin (C.px 0)
             , C.height (C.vh 100)
             , C.displayFlex
+            , C.fontFamilies
+                [ "Helvetica Neue"
+                , "Helvetica"
+                , "Arial"
+                , "sans-serif"
+                ]
+            , C.fontWeight <| C.int 300
             ]
         , html
             [ C.boxSizing C.borderBox ]
@@ -324,7 +330,34 @@ paletteToGradient index { colors, widths } =
 
 viewError : String -> Html Msg
 viewError msg =
-    text msg
+    div
+        [ css
+            [ C.displayFlex
+            , C.flex <| C.int 1
+            , C.alignItems C.center
+            , C.justifyContent C.center
+            ]
+        ]
+        [ div
+            [ css
+                [ C.width <| C.px 460
+                , C.padding2 (C.em 1) (C.em 1.5)
+                , C.backgroundColor <| C.hex "DC0139"
+                , C.color <| C.hex "FFF"
+                ]
+            ]
+            [ h3
+                [ css
+                    [ C.margin <| C.px 0
+                    , C.fontSize <| C.rem 1.25
+                    , C.fontWeight <| C.int 400
+                    ]
+                ]
+                [ text "An error occurred!" ]
+            , p []
+                [ text msg ]
+            ]
+        ]
 
 
 viewColor : Color -> Float -> Html Msg
