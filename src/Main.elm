@@ -367,7 +367,7 @@ viewPalette current index { colors, widths } =
         [ css
             [ C.displayFlex
             , C.position C.relative
-            , C.height <| C.px 150
+            , C.height <| C.px 120
             , C.cursor C.pointer
             , activeStyles
             ]
@@ -385,7 +385,7 @@ viewPalettes current palettes =
         _ ->
             div
                 [ css
-                    [ C.flex3 (C.int 0) (C.int 0) (C.px 150)
+                    [ C.flex3 (C.int 0) (C.int 0) (C.px 120)
                     , C.marginLeft C.auto
                     , C.backgroundColor <| C.hex "fff"
                     , C.overflowY C.scroll
