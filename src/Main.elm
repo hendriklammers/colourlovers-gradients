@@ -30,14 +30,7 @@ main =
 type Model
     = Init
     | Error String
-    | View GradientView
-
-
-type alias GradientView =
-    { palettes : List Palette
-    , current : Index
-    , gradient : Gradient
-    }
+    | Success (List Palette) Gradient
 
 
 type alias Color =
@@ -63,6 +56,7 @@ type alias Gradient =
     , stop2 : ColorStop
     , stopsList : List ColorStop
     , angle : Float
+    , index : Int
     }
 
 
@@ -121,73 +115,55 @@ delay time msg =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        Delay time message ->
-            ( model, delay time message )
-
-        ReceiveData (Ok palettes) ->
+    case ( msg, model ) of
+        ( ReceiveData (Ok palettes), Init ) ->
             case
                 palettes
                     |> List.head
-                    |> Maybe.andThen paletteToGradient
+                    |> Maybe.andThen (paletteToGradient 0)
             of
                 Just gradient ->
-                    ( View (GradientView palettes 0 gradient), Cmd.none )
+                    ( Success palettes gradient, Cmd.none )
 
                 Nothing ->
                     ( Error "Unable to show gradient", Cmd.none )
 
-        ReceiveData (Err _) ->
+        ( ReceiveData (Err _), Init ) ->
             ( Error "Unable to load the color palettes from the server"
             , Cmd.none
             )
 
-        Navigate nav ->
-            case model of
-                View gradientModel ->
-                    let
-                        ( current, cmd ) =
-                            navigate gradientModel.palettes gradientModel.current nav
+        ( Navigate nav, Success palettes gradient ) ->
+            let
+                ( index, cmd ) =
+                    navigate palettes gradient.index nav
+            in
+            case
+                getPalette index palettes
+                    |> Maybe.andThen (paletteToGradient index)
+            of
+                Just g ->
+                    ( Success palettes g, cmd )
 
-                        gradient =
-                            getPalette current gradientModel.palettes
-                                |> Maybe.andThen paletteToGradient
-                    in
-                    case gradient of
-                        Just g ->
-                            ( View { gradientModel | current = current, gradient = g }, cmd )
+                Nothing ->
+                    ( Error "Unable to show gradient", Cmd.none )
 
-                        Nothing ->
-                            ( Error "Unable to show gradient", Cmd.none )
+        ( Rotate angle, Success palettes gradient ) ->
+            ( Success palettes { gradient | angle = gradient.angle + angle }
+            , Cmd.none
+            )
 
-                _ ->
-                    ( model, Cmd.none )
-
-        Rotate angle ->
-            case model of
-                View gradientModel ->
-                    let
-                        gradient =
-                            gradientModel.gradient
-                    in
-                    ( View
-                        { gradientModel
-                            | gradient = { gradient | angle = gradient.angle + angle }
-                        }
-                    , Cmd.none
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        ClipboardCopy ( success, value ) ->
+        ( ClipboardCopy ( success, value ), Success palettes gradient ) ->
             let
                 log =
                     Debug.log "copied" value
             in
             ( model, Cmd.none )
 
-        Ignore ->
+        ( Delay time message, _ ) ->
+            ( model, delay time message )
+
+        _ ->
             ( model, Cmd.none )
 
 
@@ -328,8 +304,8 @@ widthToPercentage gradient width =
             0
 
 
-paletteToGradient : Palette -> Maybe Gradient
-paletteToGradient { colors, widths } =
+paletteToGradient : Index -> Palette -> Maybe Gradient
+paletteToGradient index { colors, widths } =
     let
         colorStops =
             List.map2 Tuple.pair colors (0 :: widths)
@@ -342,7 +318,7 @@ paletteToGradient { colors, widths } =
     in
     case colorStops of
         s1 :: s2 :: xs ->
-            Just (Gradient s1 s2 xs 0)
+            Just (Gradient s1 s2 xs 90 index)
 
         _ ->
             Nothing
@@ -506,8 +482,8 @@ view model =
         Error msg ->
             viewContainer [ viewError msg ]
 
-        View { current, palettes, gradient } ->
+        Success palettes gradient ->
             viewContainer
                 [ viewGradient gradient
-                , viewPalettes current palettes
+                , viewPalettes gradient.index palettes
                 ]
