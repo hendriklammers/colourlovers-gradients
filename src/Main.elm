@@ -30,18 +30,18 @@ type alias Palettes =
     }
 
 
+type alias Palette =
+    { colors : List Color
+    , widths : List Float
+    }
+
+
 type alias Color =
     String
 
 
 type alias Index =
     Int
-
-
-type alias Palette =
-    { colors : List Color
-    , widths : List Float
-    }
 
 
 type alias ColorStop =
@@ -82,7 +82,7 @@ init _ =
 getPalettes : Cmd Msg
 getPalettes =
     Http.get
-        { url = "/data/palettes.jsonx"
+        { url = "/data/palettes.json"
         , expect =
             Http.expectJson
                 (ReceiveData >> Delay 1000)
@@ -367,6 +367,7 @@ viewError msg =
                 [ C.width <| C.px 460
                 , C.padding2 (C.em 1) (C.em 1.5)
                 , C.backgroundColor <| C.hex "E32545"
+                , C.boxShadow5 (C.px -3) (C.px 3) (C.px 2) (C.px 1) (C.hex "333")
                 , C.color <| C.hex "FFF"
                 ]
             ]
@@ -469,8 +470,8 @@ viewPreloader =
 
         barStyle =
             C.batch
-                [ C.width <| C.px 12
-                , C.height <| C.px 60
+                [ C.width <| C.px 16
+                , C.height <| C.px 80
                 , C.animationName animation
                 , C.animationDuration <| C.ms 1300
                 , C.property "animation-iteration-count" "infinite"
