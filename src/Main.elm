@@ -17,20 +17,17 @@ import Task
 import Time
 
 
-main : Program () Model Msg
-main =
-    Browser.element
-        { init = init
-        , subscriptions = subscriptions
-        , update = update
-        , view = view >> toUnstyled
-        }
-
-
 type Model
     = Init
     | Error String
-    | Success (List Palette) Gradient
+    | Success Palettes Gradient
+
+
+type alias Palettes =
+    { data : List Palette
+    , active : Index
+    , page : Index
+    }
 
 
 type alias Color =
@@ -56,7 +53,6 @@ type alias Gradient =
     , stop2 : ColorStop
     , stopsList : List ColorStop
     , angle : Float
-    , index : Int
     }
 
 
@@ -86,8 +82,7 @@ init _ =
 getPalettes : Cmd Msg
 getPalettes =
     Http.get
-        -- { url = "https://cors-anywhere.herokuapp.com/http://www.colourlovers.com/api/palettes/top?format=json&showPaletteWidths=1"
-        { url = "/data/paliettes.json"
+        { url = "/data/palettes.jsonx"
         , expect =
             Http.expectJson
                 (ReceiveData >> Delay 1000)
@@ -113,16 +108,18 @@ delay time msg =
         |> Task.perform (\_ -> msg)
 
 
-selectGradient : Index -> List Palette -> Model
+selectGradient : Index -> Palettes -> Model
 selectGradient index palettes =
     case
-        palettes
+        palettes.data
             |> List.drop index
             |> List.head
-            |> Maybe.andThen (paletteToGradient index)
+            |> Maybe.andThen paletteToGradient
     of
         Just gradient ->
-            Success palettes gradient
+            Success
+                { palettes | active = index }
+                gradient
 
         Nothing ->
             Error "Unable to show gradient"
@@ -131,8 +128,8 @@ selectGradient index palettes =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
-        ( ReceiveData (Ok palettes), Init ) ->
-            ( selectGradient 0 palettes, Cmd.none )
+        ( ReceiveData (Ok data), Init ) ->
+            ( selectGradient 0 (Palettes data 0 0), Cmd.none )
 
         ( ReceiveData (Err err), Init ) ->
             let
@@ -146,7 +143,7 @@ update msg model =
         ( Navigate nav, Success palettes gradient ) ->
             let
                 ( index, cmd ) =
-                    navigate palettes gradient.index nav
+                    navigate palettes.data palettes.active nav
             in
             ( selectGradient index palettes, cmd )
 
@@ -240,6 +237,21 @@ subscriptions model =
         ]
 
 
+flexCenterStyle : C.Style
+flexCenterStyle =
+    C.batch
+        [ C.displayFlex
+        , C.flex <| C.int 1
+        , C.alignItems C.center
+        , C.justifyContent C.center
+        ]
+
+
+pxToRem : Int -> C.Rem
+pxToRem px =
+    C.rem (toFloat px / 16)
+
+
 globalStyles : Html Msg
 globalStyles =
     global
@@ -248,12 +260,13 @@ globalStyles =
             , C.height (C.vh 100)
             , C.displayFlex
             , C.fontFamilies
-                [ "Helvetica Neue"
-                , "Helvetica"
-                , "Arial"
-                , "sans-serif"
+                [ "TimesNewRoman"
+                , "Times New Roman"
+                , "Times"
+                , "serif"
                 ]
             , C.fontWeight <| C.int 300
+            , C.fontSize <| C.px 16
             ]
         , html
             [ C.boxSizing C.borderBox ]
@@ -262,20 +275,26 @@ globalStyles =
         ]
 
 
-viewGradient : Gradient -> Html Msg
-viewGradient { stop1, stop2, stopsList, angle } =
+gradientBackground : Gradient -> C.BackgroundImage (C.ListStyle {})
+gradientBackground { stop1, stop2, stopsList, angle } =
     let
         colorStop ( color, percentage ) =
             C.stop2
                 (C.hex <| color)
                 (C.pct <| percentage)
+    in
+    C.linearGradient2
+        (C.deg angle)
+        (colorStop stop1)
+        (colorStop stop2)
+        (List.map colorStop stopsList)
 
+
+viewGradient : Gradient -> Html Msg
+viewGradient gradient =
+    let
         background =
-            C.linearGradient2
-                (C.deg angle)
-                (colorStop stop1)
-                (colorStop stop2)
-                (List.map colorStop stopsList)
+            gradientBackground gradient
 
         cssString =
             "background-image: " ++ background.value ++ ";"
@@ -308,8 +327,8 @@ widthToPercentage gradient width =
             0
 
 
-paletteToGradient : Index -> Palette -> Maybe Gradient
-paletteToGradient index { colors, widths } =
+paletteToGradient : Palette -> Maybe Gradient
+paletteToGradient { colors, widths } =
     let
         colorStops =
             List.map2 Tuple.pair colors (0 :: widths)
@@ -322,7 +341,7 @@ paletteToGradient index { colors, widths } =
     in
     case colorStops of
         s1 :: s2 :: xs ->
-            Just (Gradient s1 s2 xs 90 index)
+            Just (Gradient s1 s2 xs 90)
 
         _ ->
             Nothing
@@ -332,29 +351,34 @@ viewError : String -> Html Msg
 viewError msg =
     div
         [ css
-            [ C.displayFlex
-            , C.flex <| C.int 1
-            , C.alignItems C.center
-            , C.justifyContent C.center
+            [ flexCenterStyle
+            , C.backgroundImage <|
+                gradientBackground
+                    (Gradient
+                        ( "1C1614", 0 )
+                        ( "E9E8E8", 70 )
+                        [ ( "FFF", 90 ) ]
+                        90
+                    )
             ]
         ]
         [ div
             [ css
                 [ C.width <| C.px 460
                 , C.padding2 (C.em 1) (C.em 1.5)
-                , C.backgroundColor <| C.hex "DC0139"
+                , C.backgroundColor <| C.hex "E32545"
                 , C.color <| C.hex "FFF"
                 ]
             ]
             [ h3
                 [ css
                     [ C.margin <| C.px 0
-                    , C.fontSize <| C.rem 1.25
+                    , C.fontSize <| pxToRem 30
                     , C.fontWeight <| C.int 400
                     ]
                 ]
                 [ text "An error occurred!" ]
-            , p []
+            , p [ css [ C.fontSize <| pxToRem 18 ] ]
                 [ text msg ]
             ]
         ]
@@ -406,9 +430,9 @@ viewPalette current index { colors, widths } =
         (List.map2 viewColor colors widths)
 
 
-viewPalettes : Index -> List Palette -> Html Msg
-viewPalettes current palettes =
-    case palettes of
+viewPalettes : Palettes -> Html Msg
+viewPalettes { data, active } =
+    case data of
         [] ->
             text ""
 
@@ -428,7 +452,7 @@ viewPalettes current palettes =
                         , C.listStyle C.none
                         ]
                     ]
-                    (List.indexedMap (viewPalette current) palettes)
+                    (List.indexedMap (viewPalette active) data)
                 ]
 
 
@@ -454,13 +478,7 @@ viewPreloader =
                 ]
     in
     div
-        [ css
-            [ C.displayFlex
-            , C.flex <| C.int 1
-            , C.alignItems C.center
-            , C.justifyContent C.center
-            ]
-        ]
+        [ css [ flexCenterStyle ] ]
         [ div
             [ css
                 [ C.displayFlex ]
@@ -476,11 +494,11 @@ viewPreloader =
                         ]
                         []
                 )
-                [ "F8B195"
-                , "F67280"
-                , "C06C84"
-                , "6C5B7B"
-                , "355C7D"
+                [ "1C1614"
+                , "55514F"
+                , "8E8B8A"
+                , "E9E8E8"
+                , "C6C5C3"
                 ]
             )
         ]
@@ -509,5 +527,15 @@ view model =
         Success palettes gradient ->
             viewContainer
                 [ viewGradient gradient
-                , viewPalettes gradient.index palettes
+                , viewPalettes palettes
                 ]
+
+
+main : Program () Model Msg
+main =
+    Browser.element
+        { init = init
+        , subscriptions = subscriptions
+        , update = update
+        , view = view >> toUnstyled
+        }
