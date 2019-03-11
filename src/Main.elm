@@ -5,7 +5,19 @@ import Browser.Events exposing (onKeyUp)
 import Css as C
 import Css.Animations as A
 import Css.Global exposing (body, global, html, selector)
-import Html.Styled exposing (Html, div, h3, li, p, text, toUnstyled, ul)
+import Html.Styled
+    exposing
+        ( Html
+        , button
+        , div
+        , h3
+        , li
+        , p
+        , span
+        , text
+        , toUnstyled
+        , ul
+        )
 import Html.Styled.Attributes exposing (attribute, css, id)
 import Html.Styled.Events exposing (onClick)
 import Http
@@ -59,6 +71,7 @@ type alias Gradient =
 type Msg
     = ReceiveData (Result Http.Error (List Palette))
     | Navigate Navigation
+    | Paginate Navigation
     | Rotate Float
     | ClipboardCopy ( Bool, String )
     | Ignore
@@ -70,6 +83,16 @@ type Navigation
     | Previous
     | Jump Index
     | Random
+
+
+type alias Settings =
+    { pageSize : Int }
+
+
+settings : Settings
+settings =
+    { pageSize = 25
+    }
 
 
 init : () -> ( Model, Cmd Msg )
@@ -129,7 +152,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
         ( ReceiveData (Ok data), Init ) ->
-            ( selectGradient 0 (Palettes data 0 0), Cmd.none )
+            ( selectGradient 0 (Palettes data 0 1), Cmd.none )
 
         ( ReceiveData (Err err), Init ) ->
             let
@@ -146,6 +169,11 @@ update msg model =
                     navigate palettes.data palettes.active nav
             in
             ( selectGradient index palettes, cmd )
+
+        ( Paginate nav, Success palettes gradient ) ->
+            ( Success { palettes | page = paginate palettes nav } gradient
+            , Cmd.none
+            )
 
         ( Rotate angle, Success palettes gradient ) ->
             ( Success palettes { gradient | angle = gradient.angle + angle }
@@ -164,6 +192,27 @@ update msg model =
 
         _ ->
             ( model, Cmd.none )
+
+
+paginate : Palettes -> Navigation -> Index
+paginate { data, page } nav =
+    case nav of
+        Next ->
+            if page < totalPages data then
+                page + 1
+
+            else
+                page
+
+        Previous ->
+            if page > 1 then
+                page - 1
+
+            else
+                page
+
+        _ ->
+            page
 
 
 navigate : List a -> Index -> Navigation -> ( Index, Cmd Msg )
@@ -431,30 +480,66 @@ viewPalette current index { colors, widths } =
         (List.map2 viewColor colors widths)
 
 
-viewPalettes : Palettes -> Html Msg
-viewPalettes { data, active } =
-    case data of
-        [] ->
-            text ""
+totalPages : List a -> Int
+totalPages xs =
+    ceiling <| toFloat (List.length xs) / toFloat settings.pageSize
 
-        _ ->
-            div
+
+viewPaletteNavigation : Palettes -> Html Msg
+viewPaletteNavigation { data, page } =
+    div
+        [ css
+            [ C.displayFlex
+            , C.justifyContent C.spaceBetween
+            ]
+        ]
+        [ button [ onClick (Paginate Previous) ]
+            [ text "←" ]
+        , span []
+            [ text <|
+                String.fromInt page
+                    ++ " / "
+                    ++ String.fromInt (totalPages data)
+            ]
+        , button [ onClick (Paginate Next) ]
+            [ text "→" ]
+        ]
+
+
+viewPalettes : Palettes -> Html Msg
+viewPalettes palettes =
+    let
+        visible =
+            palettes.data
+                |> List.drop ((palettes.page - 1) * settings.pageSize)
+                |> List.take settings.pageSize
+    in
+    div
+        [ css
+            [ C.displayFlex
+            , C.flex3 (C.int 0) (C.int 0) (C.px 120)
+            , C.flexDirection C.columnReverse
+            , C.marginLeft C.auto
+            , C.backgroundColor <| C.hex "fff"
+            ]
+        ]
+        [ viewPaletteNavigation palettes
+        , div
+            [ css
+                [ C.overflowY C.scroll
+                , C.flex <| C.int 1
+                ]
+            ]
+            [ ul
                 [ css
-                    [ C.flex3 (C.int 0) (C.int 0) (C.px 120)
-                    , C.marginLeft C.auto
-                    , C.backgroundColor <| C.hex "fff"
-                    , C.overflowY C.scroll
+                    [ C.margin <| C.px 0
+                    , C.padding <| C.px 0
+                    , C.listStyle C.none
                     ]
                 ]
-                [ ul
-                    [ css
-                        [ C.margin <| C.px 0
-                        , C.padding <| C.px 0
-                        , C.listStyle C.none
-                        ]
-                    ]
-                    (List.indexedMap (viewPalette active) data)
-                ]
+                (List.indexedMap (viewPalette palettes.active) visible)
+            ]
+        ]
 
 
 viewPreloader : Html Msg
