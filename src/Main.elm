@@ -12,6 +12,7 @@ import Html.Styled
         , div
         , h3
         , li
+        , nav
         , p
         , span
         , text
@@ -86,12 +87,15 @@ type Navigation
 
 
 type alias Settings =
-    { pageSize : Int }
+    { pageSize : Int
+    , paletteSize : Float
+    }
 
 
 settings : Settings
 settings =
-    { pageSize = 25
+    { pageSize = 50
+    , paletteSize = 120
     }
 
 
@@ -316,6 +320,7 @@ globalStyles =
                 ]
             , C.fontWeight <| C.int 300
             , C.fontSize <| C.px 16
+            , C.color <| C.hex "1C1614"
             ]
         , html
             [ C.boxSizing C.borderBox ]
@@ -471,7 +476,7 @@ viewPalette current index { colors, widths } =
         [ css
             [ C.displayFlex
             , C.position C.relative
-            , C.height <| C.px 120
+            , C.height <| C.px settings.paletteSize
             , C.cursor C.pointer
             , activeStyles
             ]
@@ -487,37 +492,68 @@ totalPages xs =
 
 viewPaletteNavigation : Palettes -> Html Msg
 viewPaletteNavigation { data, page } =
-    div
+    let
+        buttonStyle =
+            C.batch
+                [ C.display C.block
+                , C.padding <| C.px 0
+                , C.width <| C.px 30
+                , C.height <| C.px 30
+                , C.overflow C.visible
+                , C.border <| C.px 0
+                , C.borderRadius <| C.px 0
+                , C.fontSize <| pxToRem 21
+                , C.lineHeight <| pxToRem 30
+                , C.textAlign C.center
+                , C.cursor C.pointer
+                , C.backgroundColor <| C.hex "C6C5C3"
+                , C.boxShadow5 (C.px -2) (C.px 2) (C.px 2) (C.px 0) (C.hex "333")
+                , C.hover
+                    [ C.backgroundColor <| C.hex "A4FF44"
+                    ]
+                ]
+    in
+    nav
         [ css
             [ C.displayFlex
             , C.justifyContent C.spaceBetween
+            , C.padding <| C.px 6
             ]
+        , attribute "aria-label" "Pagination"
         ]
-        [ button [ onClick (Paginate Previous) ]
+        [ button
+            [ onClick (Paginate Previous)
+            , css [ buttonStyle ]
+            , attribute "aria-label" "Previous"
+            ]
             [ text "←" ]
-        , span []
+        , span
+            [ css
+                [ C.lineHeight <| pxToRem 30
+                , C.textAlign <| C.center
+                , C.fontSize <| pxToRem 21
+                ]
+            ]
             [ text <|
                 String.fromInt page
-                    ++ " / "
+                    ++ "/"
                     ++ String.fromInt (totalPages data)
             ]
-        , button [ onClick (Paginate Next) ]
+        , button
+            [ onClick (Paginate Next)
+            , css [ buttonStyle ]
+            , attribute "aria-label" "Next"
+            ]
             [ text "→" ]
         ]
 
 
 viewPalettes : Palettes -> Html Msg
 viewPalettes palettes =
-    let
-        visible =
-            palettes.data
-                |> List.drop ((palettes.page - 1) * settings.pageSize)
-                |> List.take settings.pageSize
-    in
     div
         [ css
             [ C.displayFlex
-            , C.flex3 (C.int 0) (C.int 0) (C.px 120)
+            , C.flex3 (C.int 0) (C.int 0) (C.px <| settings.paletteSize + 20)
             , C.flexDirection C.columnReverse
             , C.marginLeft C.auto
             , C.backgroundColor <| C.hex "fff"
@@ -537,7 +573,12 @@ viewPalettes palettes =
                     , C.listStyle C.none
                     ]
                 ]
-                (List.indexedMap (viewPalette palettes.active) visible)
+                (List.indexedMap
+                    (viewPalette palettes.active)
+                    palettes.data
+                    |> List.drop ((palettes.page - 1) * settings.pageSize)
+                    |> List.take settings.pageSize
+                )
             ]
         ]
 
