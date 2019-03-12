@@ -27,6 +27,8 @@ import Json.Decode as Decode exposing (Decoder)
 import Ports exposing (confirmCopy)
 import Process
 import Random
+import Svg.Styled exposing (path, svg)
+import Svg.Styled.Attributes as S
 import Task
 import Time
 
@@ -87,9 +89,8 @@ type Msg
     | Navigate Navigation
     | Paginate Navigation
     | Rotate Float
-    | CopySource
     | CopyConfirmation ( Bool, String )
-    | Ignore
+    | NoOp
     | Delay Float Msg
 
 
@@ -101,10 +102,11 @@ type Navigation
 
 
 type alias Button =
-    { label : String
-    , ariaLabel : String
+    { icon : Html Msg
+    , label : String
     , msg : Msg
     , size : Float
+    , attributes : List (Attribute Msg)
     }
 
 
@@ -192,9 +194,6 @@ update msg model =
             ( Success palettes { gradient | angle = gradient.angle + angle }
             , Cmd.none
             )
-
-        ( CopySource, Success palettes gradient ) ->
-            ( model, Cmd.none )
 
         ( CopyConfirmation ( success, value ), Success palettes gradient ) ->
             let
@@ -289,7 +288,7 @@ keyDecoder =
                     Navigate Random
 
                 _ ->
-                    Ignore
+                    NoOp
         )
         (Decode.field "key" Decode.string)
 
@@ -511,8 +510,8 @@ totalPages xs =
     ceiling <| toFloat (List.length xs) / toFloat settings.pageSize
 
 
-viewButton : Button -> List (Attribute Msg) -> Html Msg
-viewButton { label, ariaLabel, msg, size } attr =
+viewButton : Button -> Html Msg
+viewButton { icon, label, msg, size, attributes } =
     button
         ([ onClick msg
          , css
@@ -538,11 +537,11 @@ viewButton { label, ariaLabel, msg, size } attr =
                 [ C.backgroundColor <| C.hex "A4FF44"
                 ]
             ]
-         , attribute "aria-label" ariaLabel
+         , attribute "aria-label" label
          ]
-            ++ attr
+            ++ attributes
         )
-        [ text label ]
+        [ icon ]
 
 
 viewPaletteNavigation : Palettes -> Html Msg
@@ -555,7 +554,7 @@ viewPaletteNavigation { data, page } =
             ]
         , attribute "aria-label" "Pagination"
         ]
-        [ viewButton (Button "←" "Previous" (Paginate Previous) 30) []
+        [ viewButton (Button (text "←") "Previous" (Paginate Previous) 30 [])
         , span
             [ css
                 [ C.lineHeight <| pxToRem 30
@@ -568,37 +567,56 @@ viewPaletteNavigation { data, page } =
                     ++ "/"
                     ++ String.fromInt (totalPages data)
             ]
-        , viewButton (Button "→" "Next" (Paginate Next) 30) []
+        , viewButton (Button (text "→") "Next" (Paginate Next) 30 [])
         ]
 
 
 viewNavigation : Gradient -> Html Msg
 viewNavigation gradient =
+    let
+        buttonSize =
+            40
+
+        buttons =
+            [ Button (text "←") "Previous" (Navigate Previous) buttonSize []
+            , Button (text "→") "Next" (Navigate Next) buttonSize []
+            , Button (text "↻") "Rotate" (Rotate 45) buttonSize []
+            , Button
+                (svg
+                    [ S.width "18"
+                    , S.height "18"
+                    , S.viewBox "0 0 18 18"
+                    ]
+                    [ path
+                        [ S.d "M6,6 L6,16 L16,16 L16,6 L6,6 Z M0,0 L14,0 L14,2 L2,2 L2,14 L0,14 L0,0 Z M4,4 L18,4 L18,18 L4,18 L4,4 Z" ]
+                        []
+                    ]
+                )
+                "Copy CSS code"
+                NoOp
+                buttonSize
+                [ id "clipboard-copy"
+                , attribute "data-clipboard-text" (gradientString gradient)
+                ]
+            ]
+    in
     nav
         [ css
             [ C.displayFlex
+            , C.flexDirection C.row
+            , C.justifyContent C.spaceBetween
             , C.position C.absolute
             , C.top <| C.px 0
             , C.left <| C.px 0
-            , C.padding <| C.px 6
+            , C.margin2 (C.px 10) (C.px 10)
+            , (List.length buttons * buttonSize)
+                |> (+) ((List.length buttons - 1) * 8)
+                |> toFloat
+                |> C.px
+                |> C.width
             ]
         ]
-        [ viewButton
-            (Button "←" "Previous" (Navigate Previous) 48)
-            [ css [ C.margin <| C.px 6 ] ]
-        , viewButton
-            (Button "→" "Next" (Navigate Next) 48)
-            [ css [ C.margin <| C.px 6 ] ]
-        , viewButton
-            (Button "↻" "Rotate" (Rotate 45) 48)
-            [ css [ C.margin <| C.px 6 ] ]
-        , viewButton
-            (Button "</>" "Copy CSS code" CopySource 48)
-            [ css [ C.margin <| C.px 6 ]
-            , id "clipboard-copy"
-            , attribute "data-clipboard-text" (gradientString gradient)
-            ]
-        ]
+        (List.map viewButton buttons)
 
 
 viewPalettes : Palettes -> Html Msg
