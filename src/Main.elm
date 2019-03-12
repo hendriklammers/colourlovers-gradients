@@ -20,7 +20,7 @@ import Html.Styled
         , toUnstyled
         , ul
         )
-import Html.Styled.Attributes exposing (attribute, css, id)
+import Html.Styled.Attributes exposing (attribute, css, id, title)
 import Html.Styled.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder)
@@ -538,6 +538,7 @@ viewButton { icon, label, msg, size, attributes } =
                 ]
             ]
          , attribute "aria-label" label
+         , title label
          ]
             ++ attributes
         )
