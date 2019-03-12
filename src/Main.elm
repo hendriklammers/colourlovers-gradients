@@ -324,6 +324,10 @@ globalStyles =
             ]
         , html
             [ C.boxSizing C.borderBox ]
+        , selector "body > div"
+            [ C.flex <| C.int 1
+            , C.displayFlex
+            ]
         , selector "*, *:before, *:after"
             [ C.boxSizing C.inherit ]
         ]
