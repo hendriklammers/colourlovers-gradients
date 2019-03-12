@@ -5,6 +5,7 @@ import Browser.Events exposing (onKeyUp)
 import Css as C
 import Css.Animations as A
 import Css.Global exposing (body, global, html, selector)
+import Css.Transitions as T
 import Html.Styled
     exposing
         ( Attribute
@@ -533,8 +534,20 @@ viewButton { icon, label, msg, size, attributes } =
                 (C.px 2)
                 (C.px 0)
                 (C.rgba 0 0 0 0.7)
+            , T.transition
+                [ T.backgroundColor3 150 0 T.easeOut
+                , T.transform3 100 0 T.easeOut
+                , T.boxShadow3 100 0 T.easeOut
+                ]
             , C.hover
                 [ C.backgroundColor <| C.hex "A4FF44"
+                , C.transform <| C.translate2 (C.px -1) (C.px 2)
+                , C.boxShadow5
+                    (C.px 0)
+                    (C.px 0)
+                    (C.px 0)
+                    (C.px 0)
+                    (C.rgba 0 0 0 0.7)
                 ]
             ]
          , attribute "aria-label" label
