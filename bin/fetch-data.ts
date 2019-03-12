@@ -22,13 +22,6 @@ const PAGE_SIZE = TOTAL < 100 ? TOTAL : 100
 // const pages = Math.floor(TOTAL / PAGE_SIZE)
 // const rest = TOTAL % PAGE_SIZE
 
-const dataToPalette = (data: ServerData[]): Palette[] => {
-  return data.map(({ colors, colorWidths }) => ({
-    colors,
-    colorWidths,
-  }))
-}
-
 const getData = async (offset = 0): Promise<any[]> => {
   if (offset >= TOTAL) {
     return []
@@ -47,6 +40,7 @@ const getData = async (offset = 0): Promise<any[]> => {
   )
 
   return data
+    .filter(({ colors }: ServerData) => colors.length > 1 && colors.length <= 5)
     .map(({ colors, colorWidths }: ServerData) => ({ colors, colorWidths }))
     .concat(await getData(offset + PAGE_SIZE))
 }
