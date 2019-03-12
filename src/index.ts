@@ -6,7 +6,7 @@ const app = Elm.Main.init({
   node: document.getElementById('app'),
 })
 
-const clipboard = new Clipboard('#gradient')
+const clipboard = new Clipboard('#clipboard-copy')
 clipboard.on('success', ({ text }) => {
   app.ports.confirmCopy.send([true, text])
 })

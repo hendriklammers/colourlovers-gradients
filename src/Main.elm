@@ -7,7 +7,8 @@ import Css.Animations as A
 import Css.Global exposing (body, global, html, selector)
 import Html.Styled
     exposing
-        ( Html
+        ( Attribute
+        , Html
         , button
         , div
         , h3
@@ -28,6 +29,18 @@ import Process
 import Random
 import Task
 import Time
+
+
+settings :
+    { api : String
+    , pageSize : Int
+    , paletteSize : Float
+    }
+settings =
+    { api = "/data/palettes.json"
+    , pageSize = 50
+    , paletteSize = 120
+    }
 
 
 type Model
@@ -74,7 +87,8 @@ type Msg
     | Navigate Navigation
     | Paginate Navigation
     | Rotate Float
-    | ClipboardCopy ( Bool, String )
+    | CopySource
+    | CopyConfirmation ( Bool, String )
     | Ignore
     | Delay Float Msg
 
@@ -86,16 +100,11 @@ type Navigation
     | Random
 
 
-type alias Settings =
-    { pageSize : Int
-    , paletteSize : Float
-    }
-
-
-settings : Settings
-settings =
-    { pageSize = 50
-    , paletteSize = 120
+type alias Button =
+    { label : String
+    , ariaLabel : String
+    , msg : Msg
+    , size : Float
     }
 
 
@@ -109,7 +118,7 @@ init _ =
 getPalettes : Cmd Msg
 getPalettes =
     Http.get
-        { url = "/data/palettes.json"
+        { url = settings.api
         , expect =
             Http.expectJson
                 (ReceiveData >> Delay 1000)
@@ -184,7 +193,10 @@ update msg model =
             , Cmd.none
             )
 
-        ( ClipboardCopy ( success, value ), Success palettes gradient ) ->
+        ( CopySource, Success palettes gradient ) ->
+            ( model, Cmd.none )
+
+        ( CopyConfirmation ( success, value ), Success palettes gradient ) ->
             let
                 log =
                     Debug.log "copied" value
@@ -227,14 +239,14 @@ navigate xs current nav =
                 current + 1
 
             else
-                0
+                current
 
         Previous ->
             if current > 0 then
                 current - 1
 
             else
-                List.length xs - 1
+                current
 
         Jump i ->
             if i >= 0 && i < List.length xs then
@@ -268,10 +280,10 @@ keyDecoder =
                     Navigate Previous
 
                 "ArrowUp" ->
-                    Rotate -90
+                    Navigate Previous
 
                 "ArrowDown" ->
-                    Rotate 90
+                    Navigate Next
 
                 "Enter" ->
                     Navigate Random
@@ -286,7 +298,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ onKeyUp keyDecoder
-        , confirmCopy ClipboardCopy
+        , confirmCopy CopyConfirmation
         ]
 
 
@@ -300,9 +312,9 @@ flexCenterStyle =
         ]
 
 
-pxToRem : Int -> C.Rem
+pxToRem : Float -> C.Rem
 pxToRem px =
-    C.rem (toFloat px / 16)
+    C.rem (px / 16)
 
 
 globalStyles : Html Msg
@@ -348,15 +360,17 @@ gradientBackground { stop1, stop2, stopsList, angle } =
         (List.map colorStop stopsList)
 
 
-viewGradient : Gradient -> Html Msg
-viewGradient gradient =
+gradientString : Gradient -> String
+gradientString gradient =
     let
         background =
             gradientBackground gradient
-
-        cssString =
-            "background-image: " ++ background.value ++ ";"
     in
+    "background-image: " ++ background.value ++ ";"
+
+
+viewGradient : Gradient -> Html Msg
+viewGradient gradient =
     div
         [ css
             [ C.displayFlex
@@ -364,11 +378,9 @@ viewGradient gradient =
             ]
         ]
         [ div
-            [ id "gradient"
-            , attribute "data-clipboard-text" cssString
-            , css
+            [ css
                 [ C.flex <| C.int 1
-                , C.backgroundImage background
+                , C.backgroundImage <| gradientBackground gradient
                 ]
             ]
             []
@@ -425,7 +437,12 @@ viewError msg =
                 [ C.width <| C.px 460
                 , C.padding2 (C.em 1) (C.em 1.5)
                 , C.backgroundColor <| C.hex "E32545"
-                , C.boxShadow5 (C.px -3) (C.px 3) (C.px 2) (C.px 1) (C.hex "333")
+                , C.boxShadow5
+                    (C.px -3)
+                    (C.px 3)
+                    (C.px 2)
+                    (C.px 1)
+                    (C.rgba 0 0 0 0.7)
                 , C.color <| C.hex "FFF"
                 ]
             ]
@@ -494,29 +511,42 @@ totalPages xs =
     ceiling <| toFloat (List.length xs) / toFloat settings.pageSize
 
 
+viewButton : Button -> List (Attribute Msg) -> Html Msg
+viewButton { label, ariaLabel, msg, size } attr =
+    button
+        ([ onClick msg
+         , css
+            [ C.display C.block
+            , C.padding <| C.px 0
+            , C.width <| C.px size
+            , C.height <| C.px size
+            , C.overflow C.visible
+            , C.border <| C.px 0
+            , C.borderRadius <| C.px 0
+            , C.fontSize <| pxToRem 21
+            , C.lineHeight <| pxToRem size
+            , C.textAlign C.center
+            , C.cursor C.pointer
+            , C.backgroundColor <| C.hex "C6C5C3"
+            , C.boxShadow5
+                (C.px -2)
+                (C.px 2)
+                (C.px 2)
+                (C.px 0)
+                (C.rgba 0 0 0 0.7)
+            , C.hover
+                [ C.backgroundColor <| C.hex "A4FF44"
+                ]
+            ]
+         , attribute "aria-label" ariaLabel
+         ]
+            ++ attr
+        )
+        [ text label ]
+
+
 viewPaletteNavigation : Palettes -> Html Msg
 viewPaletteNavigation { data, page } =
-    let
-        buttonStyle =
-            C.batch
-                [ C.display C.block
-                , C.padding <| C.px 0
-                , C.width <| C.px 30
-                , C.height <| C.px 30
-                , C.overflow C.visible
-                , C.border <| C.px 0
-                , C.borderRadius <| C.px 0
-                , C.fontSize <| pxToRem 21
-                , C.lineHeight <| pxToRem 30
-                , C.textAlign C.center
-                , C.cursor C.pointer
-                , C.backgroundColor <| C.hex "C6C5C3"
-                , C.boxShadow5 (C.px -2) (C.px 2) (C.px 2) (C.px 0) (C.hex "333")
-                , C.hover
-                    [ C.backgroundColor <| C.hex "A4FF44"
-                    ]
-                ]
-    in
     nav
         [ css
             [ C.displayFlex
@@ -525,12 +555,7 @@ viewPaletteNavigation { data, page } =
             ]
         , attribute "aria-label" "Pagination"
         ]
-        [ button
-            [ onClick (Paginate Previous)
-            , css [ buttonStyle ]
-            , attribute "aria-label" "Previous"
-            ]
-            [ text "←" ]
+        [ viewButton (Button "←" "Previous" (Paginate Previous) 30) []
         , span
             [ css
                 [ C.lineHeight <| pxToRem 30
@@ -543,12 +568,36 @@ viewPaletteNavigation { data, page } =
                     ++ "/"
                     ++ String.fromInt (totalPages data)
             ]
-        , button
-            [ onClick (Paginate Next)
-            , css [ buttonStyle ]
-            , attribute "aria-label" "Next"
+        , viewButton (Button "→" "Next" (Paginate Next) 30) []
+        ]
+
+
+viewNavigation : Gradient -> Html Msg
+viewNavigation gradient =
+    nav
+        [ css
+            [ C.displayFlex
+            , C.position C.absolute
+            , C.top <| C.px 0
+            , C.left <| C.px 0
+            , C.padding <| C.px 6
             ]
-            [ text "→" ]
+        ]
+        [ viewButton
+            (Button "←" "Previous" (Navigate Previous) 48)
+            [ css [ C.margin <| C.px 6 ] ]
+        , viewButton
+            (Button "→" "Next" (Navigate Next) 48)
+            [ css [ C.margin <| C.px 6 ] ]
+        , viewButton
+            (Button "↻" "Rotate" (Rotate 45) 48)
+            [ css [ C.margin <| C.px 6 ] ]
+        , viewButton
+            (Button "</>" "Copy CSS code" CopySource 48)
+            [ css [ C.margin <| C.px 6 ]
+            , id "clipboard-copy"
+            , attribute "data-clipboard-text" (gradientString gradient)
+            ]
         ]
 
 
@@ -641,6 +690,7 @@ viewContainer content =
         [ css
             [ C.flex <| C.int 1
             , C.displayFlex
+            , C.position C.relative
             ]
         ]
         (globalStyles :: content)
@@ -657,7 +707,8 @@ view model =
 
         Success palettes gradient ->
             viewContainer
-                [ viewGradient gradient
+                [ viewNavigation gradient
+                , viewGradient gradient
                 , viewPalettes palettes
                 ]
 
