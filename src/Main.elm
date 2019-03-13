@@ -178,7 +178,7 @@ update msg model =
             , Cmd.none
             )
 
-        ( Navigate nav, Success palettes _ notification ) ->
+        ( Navigate nav, Success palettes { angle } notification ) ->
             let
                 ( index, cmd ) =
                     navigate palettes.data palettes.active nav
@@ -187,7 +187,7 @@ update msg model =
                 Just gradient ->
                     ( Success
                         { palettes | active = index }
-                        gradient
+                        { gradient | angle = angle }
                         notification
                     , cmd
                     )
@@ -214,7 +214,8 @@ update msg model =
             )
 
         ( CopyConfirmation ( success, value ), Success palettes gradient _ ) ->
-            ( Success palettes
+            ( Success
+                palettes
                 gradient
                 (Just
                     (case success of
@@ -438,7 +439,7 @@ paletteToGradient { colors, widths } =
     in
     case colorStops of
         s1 :: s2 :: xs ->
-            Just (Gradient s1 s2 xs 90)
+            Just (Gradient s1 s2 xs 180)
 
         _ ->
             Nothing
