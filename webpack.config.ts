@@ -9,7 +9,7 @@ const common: webpack.Configuration = {
   mode,
   entry: path.join(__dirname, '/src/index.ts'),
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'public'),
     filename: 'bundle.js',
   },
   module: {
@@ -25,8 +25,10 @@ const common: webpack.Configuration = {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.elm'],
   },
   devServer: {
+    contentBase: path.join(__dirname, 'public'),
     port: 3000,
     stats: 'errors-only',
+    hot: true,
   },
 }
 
@@ -68,6 +70,9 @@ const production: webpack.Configuration = {
         use: [
           {
             loader: 'elm-webpack-loader',
+            options: {
+              optimize: true,
+            },
           },
         ],
       },

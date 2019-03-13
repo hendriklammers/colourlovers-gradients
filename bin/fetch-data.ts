@@ -48,7 +48,7 @@ const getData = async (offset = 0): Promise<any[]> => {
 const main = async () => {
   try {
     const palettes: Palette[] = await getData()
-    const file = path.resolve(__dirname, '../data/palettes.json')
+    const file = path.resolve(__dirname, '../public/palettes.json')
     await fs.writeFileSync(file, JSON.stringify(palettes), 'utf8')
     console.log(`Saved ${palettes.length} color palettes in ${file}`)
   } catch (err) {

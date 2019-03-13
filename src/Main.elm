@@ -39,7 +39,7 @@ settings :
     , paletteSize : Float
     }
 settings =
-    { api = "/data/palettes.json"
+    { api = "/palettes.json"
     , pageSize = 50
     , paletteSize = 120
     }
@@ -96,7 +96,6 @@ type Msg
     | CopyConfirmation ( Bool, String )
     | CloseNotification
     | NoOp
-    | Delay Float Msg
 
 
 type Navigation
@@ -126,10 +125,7 @@ getPalettes : Cmd Msg
 getPalettes =
     Http.get
         { url = settings.api
-        , expect =
-            Http.expectJson
-                (ReceiveData >> Delay 1000)
-                paletteListDecoder
+        , expect = Http.expectJson ReceiveData paletteListDecoder
         }
 
 
@@ -177,11 +173,7 @@ update msg model =
                     , Cmd.none
                     )
 
-        ( ReceiveData (Err err), Init ) ->
-            let
-                debug =
-                    Debug.log "Error" err
-            in
+        ( ReceiveData (Err _), Init ) ->
             ( Error "Unable to load the color palettes from the server"
             , Cmd.none
             )
@@ -240,9 +232,6 @@ update msg model =
             ( Success palettes gradient Nothing
             , Cmd.none
             )
-
-        ( Delay time message, _ ) ->
-            ( model, delay time message )
 
         _ ->
             ( model, Cmd.none )

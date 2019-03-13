@@ -5,7 +5,7 @@
   "repository": "github:hendriklammers/colourlovers-gradients",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --hot",
+    "start": "webpack-dev-server",
     "build": "webpack -p",
     "types": "elm-typescript-interop",
     "fetch-data": "ts-node ./bin/fetch-data.ts 500",

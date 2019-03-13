@@ -3,4 +3,5 @@
 node_modules
 elm-stuff
 dist
+bundle.js
 .env
