@@ -49,7 +49,13 @@ settings =
 type Model
     = Init
     | Error String
-    | Success Palettes Gradient
+    | GradientView Palettes Gradient (Maybe Modal)
+
+
+type alias Modal =
+    { title : String
+    , message : String
+    }
 
 
 type alias Palettes =
@@ -91,6 +97,7 @@ type Msg
     | Paginate Navigation
     | Rotate Float
     | CopyConfirmation ( Bool, String )
+    | CloseModal
     | NoOp
     | Delay Float Msg
 
@@ -156,9 +163,10 @@ selectGradient index palettes =
             |> Maybe.andThen paletteToGradient
     of
         Just gradient ->
-            Success
+            GradientView
                 { palettes | active = index }
                 gradient
+                Nothing
 
         Nothing ->
             Error "Unable to show gradient"
@@ -179,29 +187,51 @@ update msg model =
             , Cmd.none
             )
 
-        ( Navigate nav, Success palettes gradient ) ->
+        ( Navigate nav, GradientView palettes gradient _ ) ->
             let
                 ( index, cmd ) =
                     navigate palettes.data palettes.active nav
             in
             ( selectGradient index palettes, cmd )
 
-        ( Paginate nav, Success palettes gradient ) ->
-            ( Success { palettes | page = paginate palettes nav } gradient
+        ( Paginate nav, GradientView palettes gradient _ ) ->
+            ( GradientView
+                { palettes | page = paginate palettes nav }
+                gradient
+                Nothing
             , Cmd.none
             )
 
-        ( Rotate angle, Success palettes gradient ) ->
-            ( Success palettes { gradient | angle = gradient.angle + angle }
+        ( Rotate angle, GradientView palettes gradient _ ) ->
+            ( GradientView
+                palettes
+                { gradient | angle = gradient.angle + angle }
+                Nothing
             , Cmd.none
             )
 
-        ( CopyConfirmation ( success, value ), Success palettes gradient ) ->
+        ( CopyConfirmation ( success, value ), GradientView palettes gradient _ ) ->
             let
-                log =
-                    Debug.log "copied" value
+                modal =
+                    case success of
+                        True ->
+                            Modal
+                                "Yay!"
+                                "Copied CSS code for this gradient to clipboard."
+
+                        False ->
+                            Modal
+                                "Copy failed"
+                                "Unable to copy CSS code to clipboard"
             in
-            ( model, Cmd.none )
+            ( GradientView palettes gradient (Just modal)
+            , delay 2000 CloseModal
+            )
+
+        ( CloseModal, GradientView palettes gradient _ ) ->
+            ( GradientView palettes gradient Nothing
+            , Cmd.none
+            )
 
         ( Delay time message, _ ) ->
             ( model, delay time message )
@@ -668,6 +698,37 @@ viewPalettes palettes =
         ]
 
 
+viewModal : Modal -> Html Msg
+viewModal { title, message } =
+    div
+        [ css
+            [ C.position C.absolute
+            , C.left <| C.px 10
+            , C.top <| C.px 60
+            , C.width <| C.px 460
+            , C.padding2 (C.em 1) (C.em 1.5)
+            , C.backgroundColor <| C.hex "fff"
+            , C.boxShadow5
+                (C.px -3)
+                (C.px 3)
+                (C.px 2)
+                (C.px 1)
+                (C.rgba 0 0 0 0.7)
+            ]
+        ]
+        [ h3
+            [ css
+                [ C.margin <| C.px 0
+                , C.fontSize <| pxToRem 30
+                , C.fontWeight <| C.int 400
+                ]
+            ]
+            [ text title ]
+        , p [ css [ C.fontSize <| pxToRem 18 ] ]
+            [ text message ]
+        ]
+
+
 viewPreloader : Html Msg
 viewPreloader =
     let
@@ -737,9 +798,15 @@ view model =
         Error msg ->
             viewContainer [ viewError msg ]
 
-        Success palettes gradient ->
+        GradientView palettes gradient modal ->
             viewContainer
                 [ viewNavigation gradient
+                , case modal of
+                    Just m ->
+                        viewModal m
+
+                    Nothing ->
+                        text ""
                 , viewGradient gradient
                 , viewPalettes palettes
                 ]
