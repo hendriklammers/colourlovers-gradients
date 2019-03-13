@@ -1,0 +1,12 @@
+language: elm
+elm:
+  - '0.19.0'
+node_js:
+  - '10'
+script:
+  - npm run build
+deploy:
+  provider: surge
+  skip_cleanup: true
+  domain: colourlovers-gradients.surge.sh
+  project: ./public/
