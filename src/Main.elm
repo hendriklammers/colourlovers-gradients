@@ -5,7 +5,6 @@ import Browser.Events exposing (onKeyUp)
 import Css as C
 import Css.Animations as A
 import Css.Global exposing (body, global, html, selector)
-import Css.Transitions as T
 import Html.Styled
     exposing
         ( Attribute
@@ -49,13 +48,11 @@ settings =
 type Model
     = Init
     | Error String
-    | GradientView Palettes Gradient (Maybe Modal)
+    | Success Palettes Gradient (Maybe Notification)
 
 
-type alias Modal =
-    { title : String
-    , message : String
-    }
+type alias Notification =
+    String
 
 
 type alias Palettes =
@@ -97,7 +94,7 @@ type Msg
     | Paginate Navigation
     | Rotate Float
     | CopyConfirmation ( Bool, String )
-    | CloseModal
+    | CloseNotification
     | NoOp
     | Delay Float Msg
 
@@ -154,29 +151,31 @@ delay time msg =
         |> Task.perform (\_ -> msg)
 
 
-selectGradient : Index -> Palettes -> Model
+selectGradient : Index -> List Palette -> Maybe Gradient
 selectGradient index palettes =
-    case
-        palettes.data
-            |> List.drop index
-            |> List.head
-            |> Maybe.andThen paletteToGradient
-    of
-        Just gradient ->
-            GradientView
-                { palettes | active = index }
-                gradient
-                Nothing
-
-        Nothing ->
-            Error "Unable to show gradient"
+    palettes
+        |> List.drop index
+        |> List.head
+        |> Maybe.andThen paletteToGradient
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
         ( ReceiveData (Ok data), Init ) ->
-            ( selectGradient 0 (Palettes data 0 1), Cmd.none )
+            case selectGradient 0 data of
+                Just gradient ->
+                    ( Success
+                        (Palettes data 0 1)
+                        gradient
+                        Nothing
+                    , Cmd.none
+                    )
+
+                Nothing ->
+                    ( Error "Unable to show gradient"
+                    , Cmd.none
+                    )
 
         ( ReceiveData (Err err), Init ) ->
             let
@@ -187,49 +186,58 @@ update msg model =
             , Cmd.none
             )
 
-        ( Navigate nav, GradientView palettes gradient _ ) ->
+        ( Navigate nav, Success palettes _ notification ) ->
             let
                 ( index, cmd ) =
                     navigate palettes.data palettes.active nav
             in
-            ( selectGradient index palettes, cmd )
+            case selectGradient index palettes.data of
+                Just gradient ->
+                    ( Success
+                        { palettes | active = index }
+                        gradient
+                        notification
+                    , cmd
+                    )
 
-        ( Paginate nav, GradientView palettes gradient _ ) ->
-            ( GradientView
+                Nothing ->
+                    ( Error "Unable to show gradient"
+                    , Cmd.none
+                    )
+
+        ( Paginate nav, Success palettes gradient notification ) ->
+            ( Success
                 { palettes | page = paginate palettes nav }
                 gradient
-                Nothing
+                notification
             , Cmd.none
             )
 
-        ( Rotate angle, GradientView palettes gradient _ ) ->
-            ( GradientView
+        ( Rotate angle, Success palettes gradient _ ) ->
+            ( Success
                 palettes
                 { gradient | angle = gradient.angle + angle }
                 Nothing
             , Cmd.none
             )
 
-        ( CopyConfirmation ( success, value ), GradientView palettes gradient _ ) ->
-            let
-                modal =
-                    case success of
+        ( CopyConfirmation ( success, value ), Success palettes gradient _ ) ->
+            ( Success palettes
+                gradient
+                (Just
+                    (case success of
                         True ->
-                            Modal
-                                "Yay!"
-                                "Copied CSS code for this gradient to clipboard."
+                            "Copied CSS code to clipboard."
 
                         False ->
-                            Modal
-                                "Copy failed"
-                                "Unable to copy CSS code to clipboard"
-            in
-            ( GradientView palettes gradient (Just modal)
-            , delay 2000 CloseModal
+                            "Failed to copy CSS code to clipboard"
+                    )
+                )
+            , delay 1500 CloseNotification
             )
 
-        ( CloseModal, GradientView palettes gradient _ ) ->
-            ( GradientView palettes gradient Nothing
+        ( CloseNotification, Success palettes gradient _ ) ->
+            ( Success palettes gradient Nothing
             , Cmd.none
             )
 
@@ -564,11 +572,6 @@ viewButton { icon, label, msg, size, attributes } =
                 (C.px 2)
                 (C.px 0)
                 (C.rgba 0 0 0 0.7)
-            , T.transition
-                [ T.backgroundColor3 150 0 T.easeOut
-                , T.transform3 100 0 T.easeOut
-                , T.boxShadow3 100 0 T.easeOut
-                ]
             , C.hover
                 [ C.backgroundColor <| C.hex "A4FF44"
                 , C.transform <| C.translate2 (C.px -1) (C.px 2)
@@ -698,15 +701,14 @@ viewPalettes palettes =
         ]
 
 
-viewModal : Modal -> Html Msg
-viewModal { title, message } =
+viewNotification : Notification -> Html Msg
+viewNotification message =
     div
         [ css
             [ C.position C.absolute
             , C.left <| C.px 10
             , C.top <| C.px 60
-            , C.width <| C.px 460
-            , C.padding2 (C.em 1) (C.em 1.5)
+            , C.padding2 (C.px 8) (pxToRem 10)
             , C.backgroundColor <| C.hex "fff"
             , C.boxShadow5
                 (C.px -3)
@@ -716,15 +718,12 @@ viewModal { title, message } =
                 (C.rgba 0 0 0 0.7)
             ]
         ]
-        [ h3
+        [ p
             [ css
-                [ C.margin <| C.px 0
-                , C.fontSize <| pxToRem 30
-                , C.fontWeight <| C.int 400
+                [ C.fontSize <| pxToRem 21
+                , C.margin <| C.px 0
                 ]
             ]
-            [ text title ]
-        , p [ css [ C.fontSize <| pxToRem 18 ] ]
             [ text message ]
         ]
 
@@ -798,12 +797,12 @@ view model =
         Error msg ->
             viewContainer [ viewError msg ]
 
-        GradientView palettes gradient modal ->
+        Success palettes gradient notification ->
             viewContainer
                 [ viewNavigation gradient
-                , case modal of
-                    Just m ->
-                        viewModal m
+                , case notification of
+                    Just message ->
+                        viewNotification message
 
                     Nothing ->
                         text ""
