@@ -3,10 +3,10 @@ import fs from 'fs'
 import path from 'path'
 import axios from 'axios'
 
-// Only interested in colors and colorWidths fields for now
 interface Palette {
   colors: string[]
   colorWidths: string[]
+  url: string
 }
 
 interface ServerData {
@@ -41,7 +41,11 @@ const getData = async (offset = 0): Promise<any[]> => {
 
   return data
     .filter(({ colors }: ServerData) => colors.length > 1 && colors.length <= 5)
-    .map(({ colors, colorWidths }: ServerData) => ({ colors, colorWidths }))
+    .map(({ colors, colorWidths, url }: ServerData) => ({
+      colors,
+      colorWidths,
+      url,
+    }))
     .concat(await getData(offset + PAGE_SIZE))
 }
 
