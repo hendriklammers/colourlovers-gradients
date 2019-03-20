@@ -9,8 +9,6 @@
     "build": "webpack -p",
     "types": "elm-typescript-interop",
     "fetch-data": "ts-node ./bin/fetch-data.ts 500",
-    "test": "elm-test",
-    "test:watch": "elm-test --watch",
     "deploy": "surge ./public/ colourlovers-gradients.surge.sh"
   },
   "keywords": [],
