@@ -3,9 +3,9 @@ module Main exposing (main)
 import Browser
 import Browser.Events exposing (onKeyUp)
 import Html.Styled exposing (toUnstyled)
-import Http
 import Json.Decode as Decode exposing (Decoder)
 import Model exposing (..)
+import Palette exposing (getPalettes)
 import Ports exposing (confirmCopy)
 import Process
 import Random
@@ -20,26 +20,6 @@ init _ =
     ( Init
     , getPalettes
     )
-
-
-getPalettes : Cmd Msg
-getPalettes =
-    Http.get
-        { url = settings.api
-        , expect = Http.expectJson ReceiveData paletteListDecoder
-        }
-
-
-paletteDecoder : Decoder Palette
-paletteDecoder =
-    Decode.map2 Palette
-        (Decode.field "colors" (Decode.list Decode.string))
-        (Decode.field "colorWidths" (Decode.list Decode.float))
-
-
-paletteListDecoder : Decoder (List Palette)
-paletteListDecoder =
-    Decode.list paletteDecoder
 
 
 delay : Float -> Msg -> Cmd Msg
