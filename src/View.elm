@@ -3,6 +3,7 @@ module View exposing (view)
 import Css as C
 import Css.Animations as A
 import Css.Global exposing (body, global, html, selector)
+import Gradient exposing (Gradient, gradientBackground, gradientString)
 import Html.Styled
     exposing
         ( Attribute
@@ -20,17 +21,11 @@ import Html.Styled
         )
 import Html.Styled.Attributes exposing (attribute, css, id, title)
 import Html.Styled.Events exposing (onClick)
-import Model
-    exposing
-        ( Gradient
-        , Model(..)
-        , Notification
-        )
-import Palette exposing (Color, Index, Palette, Palettes)
+import Palette exposing (Color, Navigation(..), Palette, Palettes)
 import Settings exposing (settings)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as S
-import Update exposing (Msg(..), Navigation(..))
+import Update exposing (Model(..), Msg(..), Notification, totalPages)
 
 
 type alias Button =
@@ -40,6 +35,11 @@ type alias Button =
     , size : Float
     , attributes : List (Attribute Msg)
     }
+
+
+pxToRem : Float -> C.Rem
+pxToRem px =
+    C.rem (px / 16)
 
 
 globalStyles : Html Msg
@@ -80,11 +80,6 @@ viewContainer content =
             ]
         ]
         (globalStyles :: content)
-
-
-pxToRem : Float -> C.Rem
-pxToRem px =
-    C.rem (px / 16)
 
 
 flexCenterStyle : C.Style
@@ -185,11 +180,6 @@ viewButton { icon, label, msg, size, attributes } =
             ++ attributes
         )
         [ icon ]
-
-
-totalPages : List a -> Int
-totalPages xs =
-    ceiling <| toFloat (List.length xs) / toFloat settings.pageSize
 
 
 viewPaletteNavigation : Palettes -> Html Msg
@@ -383,7 +373,7 @@ viewColor color width =
         []
 
 
-viewPalette : Index -> Index -> Palette -> Html Msg
+viewPalette : Int -> Int -> Palette -> Html Msg
 viewPalette current index { colors, widths } =
     let
         activeStyles =
@@ -416,30 +406,6 @@ viewPalette current index { colors, widths } =
         , onClick (Navigate (Jump index))
         ]
         (List.map2 viewColor colors widths)
-
-
-gradientString : Gradient -> String
-gradientString gradient =
-    let
-        background =
-            gradientBackground gradient
-    in
-    "background-image: " ++ background.value ++ ";"
-
-
-gradientBackground : Gradient -> C.BackgroundImage (C.ListStyle {})
-gradientBackground { stop1, stop2, stopsList, angle } =
-    let
-        colorStop ( color, percentage ) =
-            C.stop2
-                (C.hex <| color)
-                (C.pct <| percentage)
-    in
-    C.linearGradient2
-        (C.deg angle)
-        (colorStop stop1)
-        (colorStop stop2)
-        (List.map colorStop stopsList)
 
 
 viewGradient : Gradient -> Html Msg

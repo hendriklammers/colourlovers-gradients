@@ -1,6 +1,6 @@
 module Palette exposing
     ( Color
-    , Index
+    , Navigation(..)
     , Palette
     , Palettes
     , paletteListDecoder
@@ -11,14 +11,10 @@ import Json.Decode as Decode exposing (Decoder)
 import Settings exposing (settings)
 
 
-type alias Index =
-    Int
-
-
 type alias Palettes =
     { data : List Palette
-    , active : Index
-    , page : Index
+    , active : Int
+    , page : Int
     }
 
 
@@ -30,6 +26,13 @@ type alias Palette =
 
 type alias Color =
     String
+
+
+type Navigation
+    = Next
+    | Previous
+    | Jump Int
+    | Random
 
 
 paletteDecoder : Decoder Palette
