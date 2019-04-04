@@ -1,6 +1,5 @@
 module Palette exposing
     ( Color
-    , Navigation(..)
     , Palette
     , Palettes
     , paletteListDecoder
@@ -26,13 +25,6 @@ type alias Palette =
 
 type alias Color =
     String
-
-
-type Navigation
-    = Next
-    | Previous
-    | Jump Int
-    | Random
 
 
 paletteDecoder : Decoder Palette

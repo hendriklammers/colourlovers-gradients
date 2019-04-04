@@ -1,6 +1,7 @@
 module Update exposing
     ( Model(..)
     , Msg(..)
+    , Navigation(..)
     , Notification
     , totalPages
     , update
@@ -8,7 +9,7 @@ module Update exposing
 
 import Gradient exposing (ColorStop, Gradient)
 import Http
-import Palette exposing (Color, Navigation(..), Palette, Palettes)
+import Palette exposing (Color, Palette, Palettes)
 import Process
 import Random
 import Settings exposing (settings)
@@ -34,6 +35,13 @@ type Msg
     | CopyConfirmation ( Bool, String )
     | CloseNotification
     | NoOp
+
+
+type Navigation
+    = Next
+    | Previous
+    | Jump Int
+    | Random
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

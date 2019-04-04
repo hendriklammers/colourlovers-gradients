@@ -8,19 +8,19 @@ import Json.Decode as Decode exposing (Decoder)
 import Palette exposing (paletteListDecoder)
 import Ports exposing (confirmCopy)
 import Settings exposing (settings)
-import Update exposing (Model(..), Msg(..), update)
+import Update exposing (Model(..), Msg(..), Navigation(..), update)
 import View exposing (view)
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( Init
-    , getPalettes
+    , get
     )
 
 
-getPalettes : Cmd Msg
-getPalettes =
+get : Cmd Msg
+get =
     Http.get
         { url = settings.api
         , expect = Http.expectJson ReceiveData paletteListDecoder
@@ -41,19 +41,19 @@ keyDecoder =
         (\key ->
             case key of
                 "ArrowRight" ->
-                    Navigate Palette.Next
+                    Navigate Next
 
                 "ArrowLeft" ->
-                    Navigate Palette.Previous
+                    Navigate Previous
 
                 "ArrowUp" ->
-                    Navigate Palette.Previous
+                    Navigate Previous
 
                 "ArrowDown" ->
-                    Navigate Palette.Next
+                    Navigate Next
 
                 "Enter" ->
-                    Navigate Palette.Random
+                    Navigate Random
 
                 _ ->
                     NoOp
