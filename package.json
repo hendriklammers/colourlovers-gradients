@@ -8,6 +8,7 @@
     "start": "webpack-dev-server",
     "build": "webpack -p",
     "types": "elm-typescript-interop",
+    "favicon": "ts-node ./bin/favicon.ts",
     "fetch-data": "ts-node ./bin/fetch-data.ts 500",
     "deploy": "surge ./public/ colourlovers-gradients.surge.sh"
   },
@@ -36,6 +37,7 @@
   "dependencies": {
     "@types/clipboard": "^2.0.1",
     "axios": "^0.18.0",
+    "canvas": "^2.4.1",
     "clipboard": "^2.0.4"
   }
 }
