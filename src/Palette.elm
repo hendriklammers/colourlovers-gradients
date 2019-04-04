@@ -1,14 +1,18 @@
 module Palette exposing
     ( Color
+    , Index
     , Palette
     , Palettes
-    , getPalettes
+    , paletteListDecoder
     )
 
 import Http
 import Json.Decode as Decode exposing (Decoder)
-import Model exposing (Index, Msg(..))
 import Settings exposing (settings)
+
+
+type alias Index =
+    Int
 
 
 type alias Palettes =
@@ -26,14 +30,6 @@ type alias Palette =
 
 type alias Color =
     String
-
-
-getPalettes : Cmd Msg
-getPalettes =
-    Http.get
-        { url = settings.api
-        , expect = Http.expectJson ReceiveData paletteListDecoder
-        }
 
 
 paletteDecoder : Decoder Palette
