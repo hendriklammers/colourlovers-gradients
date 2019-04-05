@@ -10,6 +10,7 @@ module Update exposing
 import Gradient exposing (ColorStop, Gradient)
 import Http
 import Palette exposing (Color, Palette, Palettes)
+import Ports exposing (changePalette)
 import Process
 import Random
 import Settings exposing (settings)
@@ -49,12 +50,12 @@ update msg model =
     case ( msg, model ) of
         ( ReceiveData (Ok data), Init ) ->
             case selectGradient 0 data of
-                Just gradient ->
+                Just ( gradient, palette ) ->
                     ( Success
                         (Palettes data 0 1)
                         gradient
                         Nothing
-                    , Cmd.none
+                    , changePalette palette
                     )
 
                 Nothing ->
@@ -73,12 +74,15 @@ update msg model =
                     navigate palettes.data palettes.active nav
             in
             case selectGradient index palettes.data of
-                Just gradient ->
+                Just ( gradient, palette ) ->
                     ( Success
                         { palettes | active = index }
                         { gradient | angle = angle }
                         notification
-                    , cmd
+                    , Cmd.batch
+                        [ cmd
+                        , changePalette palette
+                        ]
                     )
 
                 Nothing ->
@@ -133,7 +137,7 @@ delay time msg =
         |> Task.perform (\_ -> msg)
 
 
-selectGradient : Int -> List Palette -> Maybe Gradient
+selectGradient : Int -> List Palette -> Maybe ( Gradient, Palette )
 selectGradient index palettes =
     palettes
         |> List.drop index
@@ -141,11 +145,11 @@ selectGradient index palettes =
         |> Maybe.andThen paletteToGradient
 
 
-paletteToGradient : Palette -> Maybe Gradient
-paletteToGradient { colors, widths } =
+paletteToGradient : Palette -> Maybe ( Gradient, Palette )
+paletteToGradient palette =
     let
         colorStops =
-            List.map2 Tuple.pair colors (0 :: widths)
+            List.map2 Tuple.pair palette.colors (0 :: palette.widths)
                 |> List.foldl
                     (\( color, width ) xs ->
                         ( color, widthToPercentage xs width ) :: xs
@@ -155,7 +159,7 @@ paletteToGradient { colors, widths } =
     in
     case colorStops of
         s1 :: s2 :: xs ->
-            Just (Gradient s1 s2 xs 180)
+            Just ( Gradient s1 s2 xs 180, palette )
 
         _ ->
             Nothing

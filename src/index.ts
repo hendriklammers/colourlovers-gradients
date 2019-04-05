@@ -13,3 +13,8 @@ clipboard.on('success', ({ text }) => {
 clipboard.on('error', ({ text }) => {
   app.ports.confirmCopy.send([false, text])
 })
+
+// Update favicon when active color palette has changed
+app.ports.changePalette.subscribe(palette => {
+  console.log(palette)
+})

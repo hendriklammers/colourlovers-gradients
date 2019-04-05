@@ -9,6 +9,9 @@ export namespace Elm {
         confirmCopy: {
           send(data: [boolean, string]): void
         }
+        changePalette: {
+          subscribe(callback: (data: { colors: string[]; widths: number[] }) => void): void
+        }
       };
     }
     export function init(options: {
