@@ -10,7 +10,7 @@ module Update exposing
 import Gradient exposing (ColorStop, Gradient)
 import Http
 import Palette exposing (Color, Palette, Palettes)
-import Ports exposing (changePalette)
+import Ports exposing (updateFavicon)
 import Process
 import Random
 import Settings exposing (settings)
@@ -55,7 +55,7 @@ update msg model =
                         (Palettes data 0 1)
                         gradient
                         Nothing
-                    , changePalette palette
+                    , updateFavicon palette
                     )
 
                 Nothing ->
@@ -81,7 +81,7 @@ update msg model =
                         notification
                     , Cmd.batch
                         [ cmd
-                        , changePalette palette
+                        , updateFavicon palette
                         ]
                     )
 

@@ -9,7 +9,7 @@ export namespace Elm {
         confirmCopy: {
           send(data: [boolean, string]): void
         }
-        changePalette: {
+        updateFavicon: {
           subscribe(callback: (data: { colors: string[]; widths: number[] }) => void): void
         }
       };

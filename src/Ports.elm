@@ -1,4 +1,4 @@
-port module Ports exposing (changePalette, confirmCopy)
+port module Ports exposing (confirmCopy, updateFavicon)
 
 import Palette exposing (Palette)
 
@@ -6,4 +6,4 @@ import Palette exposing (Palette)
 port confirmCopy : (( Bool, String ) -> msg) -> Sub msg
 
 
-port changePalette : Palette -> Cmd msg
+port updateFavicon : Palette -> Cmd msg
