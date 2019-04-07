@@ -376,36 +376,44 @@ viewColor color width =
 viewPalette : Int -> Int -> Palette -> Html Msg
 viewPalette current index { colors, widths } =
     let
-        activeStyles =
+        active =
             if current == index then
-                C.before
-                    [ C.display C.block
-                    , C.property "content" "''"
-                    , C.position C.absolute
-                    , C.right <| C.px 0
-                    , C.top <| C.px 20
-                    , C.width <| C.pct 0
-                    , C.height <| C.pct 0
-                    , C.zIndex <| C.int 2
-                    , C.borderStyle C.solid
-                    , C.borderWidth4 (C.px 40) (C.px 40) (C.px 40) (C.px 0)
-                    , C.borderColor4 C.transparent (C.hex "fff") C.transparent C.transparent
+                span
+                    [ css
+                        [ C.display C.block
+                        , C.position C.absolute
+                        , C.right <| C.px -10
+                        , C.top <| C.px 0
+                        , C.color <| C.hex "C6C5C3"
+                        , C.fontSize <| C.px 96
+                        , C.lineHeight <| C.px 120
+                        , C.textShadow4
+                            (C.px 2)
+                            (C.px 2)
+                            (C.px 2)
+                            (C.rgba 0 0 0 0.7)
+                        , C.transform <| C.scaleX -1
+                        ]
                     ]
+                    [ text "▸" ]
 
             else
-                C.batch []
+                text ""
     in
     li
-        [ css
-            [ C.displayFlex
-            , C.position C.relative
-            , C.height <| C.px settings.paletteSize
-            , C.cursor C.pointer
-            , activeStyles
-            ]
-        , onClick (Navigate (Jump index))
+        [ onClick (Navigate (Jump index))
         ]
-        (List.map2 viewColor colors widths)
+        [ div
+            [ css
+                [ C.displayFlex
+                , C.position C.relative
+                , C.height <| C.px settings.paletteSize
+                , C.cursor C.pointer
+                , C.overflow C.hidden
+                ]
+            ]
+            (active :: List.map2 viewColor colors widths)
+        ]
 
 
 viewGradient : Gradient -> Html Msg
