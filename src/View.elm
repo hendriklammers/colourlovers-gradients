@@ -305,13 +305,13 @@ viewNotification message =
                 (C.px -3)
                 (C.px 3)
                 (C.px 2)
-                (C.px 1)
+                (C.px 0)
                 (C.rgba 0 0 0 0.7)
             ]
         ]
         [ p
             [ css
-                [ C.fontSize <| pxToRem 21
+                [ C.fontSize <| pxToRem 18
                 , C.margin <| C.px 0
                 ]
             ]
