@@ -378,18 +378,18 @@ viewPalette current index { colors, widths } =
     let
         activeStyles =
             if current == index then
-                C.batch
-                    [ C.before
-                        [ C.display C.block
-                        , C.property "content" "''"
-                        , C.position C.absolute
-                        , C.left <| C.px 0
-                        , C.top <| C.px 0
-                        , C.width <| C.pct 100
-                        , C.height <| C.pct 100
-                        , C.zIndex <| C.int 2
-                        , C.border3 (C.px 5) C.solid (C.hex "fff")
-                        ]
+                C.before
+                    [ C.display C.block
+                    , C.property "content" "''"
+                    , C.position C.absolute
+                    , C.right <| C.px 0
+                    , C.top <| C.px 20
+                    , C.width <| C.pct 0
+                    , C.height <| C.pct 0
+                    , C.zIndex <| C.int 2
+                    , C.borderStyle C.solid
+                    , C.borderWidth4 (C.px 40) (C.px 40) (C.px 40) (C.px 0)
+                    , C.borderColor4 C.transparent (C.hex "fff") C.transparent C.transparent
                     ]
 
             else
