@@ -382,10 +382,10 @@ viewPalette current index { colors, widths } =
                     [ css
                         [ C.display C.block
                         , C.position C.absolute
-                        , C.right <| C.px -10
-                        , C.top <| C.px 0
+                        , C.right <| C.px -24
+                        , C.top <| C.px -3
                         , C.color <| C.hex "C6C5C3"
-                        , C.fontSize <| C.px 96
+                        , C.fontSize <| C.px 120
                         , C.lineHeight <| C.px 120
                         , C.textShadow4
                             (C.px 2)
