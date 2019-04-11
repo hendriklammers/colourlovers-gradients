@@ -3,10 +3,10 @@ module Main exposing (main)
 import Browser
 import Html.Styled exposing (toUnstyled)
 import Http
+import Model exposing (Model(..), Msg(..), Navigation(..), update)
 import Palette exposing (paletteListDecoder)
 import Settings exposing (settings)
 import Subscriptions exposing (subscriptions)
-import Update exposing (Model(..), Msg(..), Navigation(..), update)
 import View exposing (view)
 
 

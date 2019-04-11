@@ -2,8 +2,8 @@ module Subscriptions exposing (subscriptions)
 
 import Browser.Events exposing (onKeyUp)
 import Json.Decode as Decode exposing (Decoder)
+import Model exposing (Model, Msg(..), Navigation(..))
 import Ports exposing (confirmCopy)
-import Update exposing (Model, Msg(..), Navigation(..))
 
 
 subscriptions : Model -> Sub Msg

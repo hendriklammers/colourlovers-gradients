@@ -21,11 +21,11 @@ import Html.Styled
         )
 import Html.Styled.Attributes exposing (attribute, css, id, title)
 import Html.Styled.Events exposing (onClick)
+import Model exposing (Model(..), Msg(..), Navigation(..), Notification, totalPages)
 import Palette exposing (Color, Palette, Palettes)
 import Settings exposing (settings)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as S
-import Update exposing (Model(..), Msg(..), Navigation(..), Notification, totalPages)
 
 
 type alias Button =

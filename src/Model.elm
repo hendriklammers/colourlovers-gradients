@@ -1,4 +1,4 @@
-module Update exposing
+module Model exposing
     ( Model(..)
     , Msg(..)
     , Navigation(..)
@@ -156,6 +156,9 @@ paletteToGradient palette =
                     )
                     []
                 |> List.reverse
+
+        debug =
+            Debug.log "widths" palette.widths
     in
     case colorStops of
         s1 :: s2 :: xs ->
