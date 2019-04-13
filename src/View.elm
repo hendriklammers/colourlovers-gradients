@@ -237,9 +237,7 @@ viewNavigation gradient =
             40
 
         buttons =
-            [ Button (text "←") "Previous" (Navigate Previous) buttonSize []
-            , Button (text "→") "Next" (Navigate Next) buttonSize []
-            , Button (text "↻") "Rotate" (Rotate 45) buttonSize []
+            [ Button (text "↻") "Rotate" (Rotate 45) buttonSize []
             , Button
                 (svg
                     [ S.width "18"
@@ -257,6 +255,8 @@ viewNavigation gradient =
                 [ id "clipboard-copy"
                 , attribute "data-clipboard-text" (gradientString gradient)
                 ]
+            , Button (text "←") "Previous" (Navigate Previous) buttonSize []
+            , Button (text "→") "Next" (Navigate Next) buttonSize []
             ]
     in
     nav
