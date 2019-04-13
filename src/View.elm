@@ -275,6 +275,8 @@ viewNavigation gradient =
                 |> C.width
             , mediaMobile
                 [ C.right (C.px <| (settings.paletteSize / 1.5))
+                , C.top <| C.auto
+                , C.bottom <| C.px 0
                 ]
             ]
         ]
