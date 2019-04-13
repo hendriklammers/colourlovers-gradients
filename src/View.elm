@@ -3,6 +3,7 @@ module View exposing (view)
 import Css as C
 import Css.Animations as A
 import Css.Global exposing (body, global, html, selector)
+import Css.Media exposing (withMediaQuery)
 import Gradient exposing (Gradient, gradientBackground, gradientString)
 import Html.Styled
     exposing
@@ -58,6 +59,13 @@ fontHelvetica =
             , "sans-serif"
             ]
         ]
+
+
+mediaMobile : List C.Style -> C.Style
+mediaMobile styles =
+    withMediaQuery
+        [ "screen and (max-width: 480px)" ]
+        styles
 
 
 globalStyles : Html Msg
@@ -211,6 +219,7 @@ viewPaletteNavigation { data, page } =
                 [ C.lineHeight <| pxToRem 30
                 , C.textAlign C.center
                 , C.fontSize <| pxToRem 18
+                , mediaMobile [ C.display C.none ]
                 ]
             ]
             [ span [] [ text <| String.fromInt page ]
@@ -264,6 +273,9 @@ viewNavigation gradient =
                 |> toFloat
                 |> C.px
                 |> C.width
+            , mediaMobile
+                [ C.right (C.px <| (settings.paletteSize / 1.5))
+                ]
             ]
         ]
         (List.map viewButton buttons)
@@ -278,6 +290,9 @@ viewPalettes palettes =
             , C.flexDirection C.columnReverse
             , C.marginLeft C.auto
             , C.backgroundColor <| C.hex "fff"
+            , mediaMobile
+                [ C.flex3 (C.int 0) (C.int 0) (C.px <| (settings.paletteSize / 1.5))
+                ]
             ]
         ]
         [ viewPaletteNavigation palettes
@@ -397,14 +412,20 @@ viewPalette current index { colors, widths } =
                         , C.right <| C.px -24
                         , C.top <| C.px -3
                         , C.color <| C.hex "C6C5C3"
-                        , C.fontSize <| C.px 120
-                        , C.lineHeight <| C.px 120
+                        , C.fontSize <| C.px settings.paletteSize
+                        , C.lineHeight <| C.px settings.paletteSize
                         , C.textShadow4
                             (C.px 2)
                             (C.px 2)
                             (C.px 2)
                             (C.rgba 0 0 0 0.7)
                         , C.transform <| C.scaleX -1
+                        , mediaMobile
+                            [ C.fontSize <| C.px (settings.paletteSize / 1.5)
+                            , C.lineHeight <| C.px (settings.paletteSize / 1.5)
+                            , C.top <| C.px -5
+                            , C.right <| C.px -16
+                            ]
                         ]
                     ]
                     [ text "▸" ]
@@ -422,6 +443,8 @@ viewPalette current index { colors, widths } =
                 , C.height <| C.px settings.paletteSize
                 , C.cursor C.pointer
                 , C.overflow C.hidden
+                , mediaMobile
+                    [ C.height <| C.px (settings.paletteSize / 1.5) ]
                 ]
             ]
             (active :: List.map2 viewColor colors widths)
