@@ -16,7 +16,6 @@ import Html.Styled
         , p
         , span
         , text
-        , toUnstyled
         , ul
         )
 import Html.Styled.Attributes exposing (attribute, css, id, title)

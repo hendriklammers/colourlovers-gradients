@@ -5,9 +5,7 @@ module Palette exposing
     , paletteListDecoder
     )
 
-import Http
 import Json.Decode as Decode exposing (Decoder)
-import Settings exposing (settings)
 
 
 type alias Palettes =

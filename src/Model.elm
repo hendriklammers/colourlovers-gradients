@@ -9,13 +9,12 @@ module Model exposing
 
 import Gradient exposing (ColorStop, Gradient)
 import Http
-import Palette exposing (Color, Palette, Palettes)
+import Palette exposing (Palette, Palettes)
 import Ports exposing (updateFavicon)
 import Process
 import Random
 import Settings exposing (settings)
 import Task
-import Time
 
 
 type Model
@@ -106,17 +105,16 @@ update msg model =
             , Cmd.none
             )
 
-        ( CopyConfirmation ( success, value ), Success palettes gradient _ ) ->
+        ( CopyConfirmation ( success, _ ), Success palettes gradient _ ) ->
             ( Success
                 palettes
                 gradient
                 (Just
-                    (case success of
-                        True ->
-                            "Copied CSS code to clipboard."
+                    (if success then
+                        "Copied CSS code to clipboard."
 
-                        False ->
-                            "Failed to copy CSS code to clipboard"
+                     else
+                        "Failed to copy CSS code to clipboard"
                     )
                 )
             , delay 1500 CloseNotification
@@ -168,7 +166,7 @@ paletteToGradient palette =
 widthToPercentage : List ColorStop -> Float -> Float
 widthToPercentage gradient width =
     case gradient of
-        ( _, previousWidth ) :: xs ->
+        ( _, previousWidth ) :: _ ->
             previousWidth + width * 100
 
         _ ->

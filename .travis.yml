@@ -4,6 +4,7 @@ elm:
 node_js:
   - '10'
 script:
+  - npm run analyse
   - npm run build
 deploy:
   provider: surge

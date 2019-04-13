@@ -1,13 +1,13 @@
 module Subscriptions exposing (subscriptions)
 
 import Browser.Events exposing (onKeyUp)
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode
 import Model exposing (Model, Msg(..), Navigation(..))
 import Ports exposing (confirmCopy)
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.batch
         [ onKeyUp keyDecoder
         , confirmCopy CopyConfirmation
