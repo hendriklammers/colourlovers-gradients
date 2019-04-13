@@ -275,8 +275,6 @@ viewNavigation gradient =
                 |> C.width
             , mediaMobile
                 [ C.right (C.px <| (settings.paletteSize / 1.5))
-                , C.top <| C.auto
-                , C.bottom <| C.px 0
                 ]
             ]
         ]
@@ -415,7 +413,7 @@ viewPalette current index { colors, widths } =
                         , C.right <| C.px -24
                         , C.top <| C.px -3
                         , C.color <| C.hex "C6C5C3"
-                        , C.fontSize <| C.px settings.paletteSize
+                        , C.fontSize <| C.px 120
                         , C.lineHeight <| C.px settings.paletteSize
                         , C.textShadow4
                             (C.px 2)
@@ -424,10 +422,8 @@ viewPalette current index { colors, widths } =
                             (C.rgba 0 0 0 0.7)
                         , C.transform <| C.scaleX -1
                         , mediaMobile
-                            [ C.fontSize <| C.px (settings.paletteSize / 1.5)
-                            , C.lineHeight <| C.px (settings.paletteSize / 1.5)
-                            , C.top <| C.px -5
-                            , C.right <| C.px -16
+                            [ C.lineHeight <| C.px (settings.paletteSize / 1.5)
+                            , C.top <| C.px -6
                             ]
                         ]
                     ]
