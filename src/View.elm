@@ -20,7 +20,14 @@ import Html.Styled
         )
 import Html.Styled.Attributes exposing (attribute, css, id, title)
 import Html.Styled.Events exposing (onClick)
-import Model exposing (Model(..), Msg(..), Navigation(..), Notification, totalPages)
+import Model
+    exposing
+        ( Model(..)
+        , Msg(..)
+        , Navigation(..)
+        , Notification
+        , totalPages
+        )
 import Palette exposing (Color, Palette, Palettes)
 import Settings exposing (settings)
 import Svg.Styled exposing (path, svg)
@@ -41,6 +48,18 @@ pxToRem px =
     C.rem (px / 16)
 
 
+fontHelvetica : C.Style
+fontHelvetica =
+    C.batch
+        [ C.fontFamilies
+            [ "Helvetica Neue"
+            , "Helvetica"
+            , "Arial"
+            , "sans-serif"
+            ]
+        ]
+
+
 globalStyles : Html Msg
 globalStyles =
     global
@@ -48,15 +67,10 @@ globalStyles =
             [ C.margin (C.px 0)
             , C.height (C.vh 100)
             , C.displayFlex
-            , C.fontFamilies
-                [ "TimesNewRoman"
-                , "Times New Roman"
-                , "Times"
-                , "serif"
-                ]
-            , C.fontWeight <| C.int 300
+            , C.fontWeight <| C.int 400
             , C.fontSize <| C.px 16
             , C.color <| C.hex "1C1614"
+            , fontHelvetica
             ]
         , html
             [ C.boxSizing C.borderBox ]
@@ -195,14 +209,13 @@ viewPaletteNavigation { data, page } =
         , span
             [ css
                 [ C.lineHeight <| pxToRem 30
-                , C.textAlign <| C.center
-                , C.fontSize <| pxToRem 21
+                , C.textAlign C.center
+                , C.fontSize <| pxToRem 18
                 ]
             ]
-            [ text <|
-                String.fromInt page
-                    ++ "/"
-                    ++ String.fromInt (totalPages data)
+            [ span [] [ text <| String.fromInt page ]
+            , text "/"
+            , span [] [ text <| String.fromInt (totalPages data) ]
             ]
         , viewButton (Button (text "→") "Next" (Paginate Next) 30 [])
         ]
@@ -244,7 +257,7 @@ viewNavigation gradient =
             , C.justifyContent C.spaceBetween
             , C.position C.absolute
             , C.top <| C.px 0
-            , C.left <| C.px 0
+            , C.right (C.px <| settings.paletteSize + 20)
             , C.margin2 (C.px 10) (C.px 10)
             , (List.length buttons * buttonSize)
                 |> (+) ((List.length buttons - 1) * 8)
@@ -297,7 +310,7 @@ viewNotification message =
         [ css
             [ C.position C.absolute
             , C.left <| C.px 10
-            , C.top <| C.px 60
+            , C.top <| C.px 10
             , C.padding2 (C.px 8) (pxToRem 10)
             , C.backgroundColor <| C.hex "fff"
             , C.boxShadow5
