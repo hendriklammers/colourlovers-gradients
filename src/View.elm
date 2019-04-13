@@ -363,7 +363,8 @@ viewError msg =
         ]
         [ div
             [ css
-                [ C.width <| C.px 460
+                [ C.maxWidth <| C.px 460
+                , C.margin <| C.px 20
                 , C.padding2 (C.em 1) (C.em 1.5)
                 , C.backgroundColor <| C.hex "E32545"
                 , C.boxShadow5
