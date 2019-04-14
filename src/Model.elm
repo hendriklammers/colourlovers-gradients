@@ -7,7 +7,7 @@ module Model exposing
     , update
     )
 
-import Gradient exposing (ColorStop, Gradient, fromPalette)
+import Gradient exposing (Gradient, fromPalette)
 import Http
 import Palette exposing (Palette, Palettes)
 import Ports exposing (updateFavicon)
