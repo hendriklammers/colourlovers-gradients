@@ -1,12 +1,13 @@
 module Gradient exposing
     ( ColorStop
     , Gradient
+    , fromPalette
     , gradientBackground
     , gradientString
     )
 
 import Css as C
-import Palette exposing (Color)
+import Palette exposing (Color, Palette)
 
 
 type alias ColorStop =
@@ -43,3 +44,33 @@ gradientBackground { stop1, stop2, stopsList, angle } =
         (colorStop stop1)
         (colorStop stop2)
         (List.map colorStop stopsList)
+
+
+fromPalette : Palette -> Maybe ( Gradient, Palette )
+fromPalette palette =
+    let
+        colorStops =
+            List.map2 Tuple.pair palette.colors (0 :: palette.widths)
+                |> List.foldl
+                    (\( color, width ) xs ->
+                        ( color, widthToPercentage xs width ) :: xs
+                    )
+                    []
+                |> List.reverse
+    in
+    case colorStops of
+        s1 :: s2 :: xs ->
+            Just ( Gradient s1 s2 xs 180, palette )
+
+        _ ->
+            Nothing
+
+
+widthToPercentage : List ColorStop -> Float -> Float
+widthToPercentage gradient width =
+    case gradient of
+        ( _, previousWidth ) :: _ ->
+            previousWidth + width * 100
+
+        _ ->
+            0

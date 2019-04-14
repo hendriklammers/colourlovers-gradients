@@ -7,7 +7,7 @@ module Model exposing
     , update
     )
 
-import Gradient exposing (ColorStop, Gradient)
+import Gradient exposing (ColorStop, Gradient, fromPalette)
 import Http
 import Palette exposing (Palette, Palettes)
 import Ports exposing (updateFavicon)
@@ -140,37 +140,7 @@ selectGradient index palettes =
     palettes
         |> List.drop index
         |> List.head
-        |> Maybe.andThen paletteToGradient
-
-
-paletteToGradient : Palette -> Maybe ( Gradient, Palette )
-paletteToGradient palette =
-    let
-        colorStops =
-            List.map2 Tuple.pair palette.colors (0 :: palette.widths)
-                |> List.foldl
-                    (\( color, width ) xs ->
-                        ( color, widthToPercentage xs width ) :: xs
-                    )
-                    []
-                |> List.reverse
-    in
-    case colorStops of
-        s1 :: s2 :: xs ->
-            Just ( Gradient s1 s2 xs 180, palette )
-
-        _ ->
-            Nothing
-
-
-widthToPercentage : List ColorStop -> Float -> Float
-widthToPercentage gradient width =
-    case gradient of
-        ( _, previousWidth ) :: _ ->
-            previousWidth + width * 100
-
-        _ ->
-            0
+        |> Maybe.andThen fromPalette
 
 
 totalPages : List a -> Int
