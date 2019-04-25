@@ -132,6 +132,10 @@ viewPreloader =
                 , C.animationDuration <| C.ms 1300
                 , C.property "animation-iteration-count" "infinite"
                 , C.property "animation-timing-function" "ease-in-out"
+                , mediaMobile
+                    [ C.width <| C.px 12
+                    , C.height <| C.px 60
+                    ]
                 ]
     in
     div
