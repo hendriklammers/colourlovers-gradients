@@ -6,12 +6,13 @@
   "main": "index.js",
   "scripts": {
     "analyse": "elm-analyse",
-    "start": "webpack-dev-server",
     "build": "webpack -p",
-    "types": "elm-typescript-interop",
+    "deploy": "surge ./public/ colourlovers-gradients.surge.sh",
     "favicon": "ts-node ./bin/favicon.ts",
     "fetch-data": "ts-node ./bin/fetch-data.ts 500",
-    "deploy": "surge ./public/ colourlovers-gradients.surge.sh"
+    "start": "webpack-dev-server",
+    "test": "elm-test",
+    "types": "elm-typescript-interop"
   },
   "keywords": [],
   "author": "Hendrik Lammers <lammers@gmail.com> (http://www.hendriklammers.com)",
