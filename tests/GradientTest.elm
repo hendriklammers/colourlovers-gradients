@@ -1,6 +1,6 @@
-module Example exposing (suite)
+module GradientTest exposing (suite)
 
-import Expect exposing (Expectation)
+import Expect
 import Gradient exposing (widthsToPercentages)
 import Test exposing (..)
 
