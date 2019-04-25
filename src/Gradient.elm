@@ -4,6 +4,7 @@ module Gradient exposing
     , fromPalette
     , gradientBackground
     , gradientString
+    , widthsToPercentages
     )
 
 import Css as C
@@ -46,17 +47,48 @@ gradientBackground { stop1, stop2, stopsList, angle } =
         (List.map colorStop stopsList)
 
 
+aggregateWidths : List Float -> List Float
+aggregateWidths xs =
+    xs
+        |> List.foldl
+            (\cur acc ->
+                Maybe.withDefault 0 (List.head acc) + cur * 100 :: acc
+            )
+            [ 0 ]
+        |> List.reverse
+        |> List.take (List.length xs)
+
+
+equalWidths : List Float -> List Float
+equalWidths xs =
+    List.indexedMap
+        (\i _ -> toFloat i * (100 / toFloat (List.length xs - 1)))
+        xs
+
+
+widthsToPercentages : List Float -> List Float
+widthsToPercentages xs =
+    case xs of
+        x :: _ ->
+            -- Check if all widths are equal
+            if List.repeat (List.length xs) x == xs then
+                equalWidths xs
+
+            else
+                aggregateWidths xs
+
+        [] ->
+            []
+
+
 fromPalette : Palette -> Maybe ( Gradient, Palette )
 fromPalette palette =
     let
+        widths =
+            widthsToPercentages palette.widths
+
         colorStops =
-            List.map2 Tuple.pair palette.colors (0 :: palette.widths)
-                |> List.foldl
-                    (\( color, width ) xs ->
-                        ( color, widthToPercentage xs width ) :: xs
-                    )
-                    []
-                |> List.reverse
+            List.map2 Tuple.pair palette.colors widths
     in
     case colorStops of
         s1 :: s2 :: xs ->
@@ -64,13 +96,3 @@ fromPalette palette =
 
         _ ->
             Nothing
-
-
-widthToPercentage : List ColorStop -> Float -> Float
-widthToPercentage gradient width =
-    case gradient of
-        ( _, previousWidth ) :: _ ->
-            previousWidth + width * 100
-
-        _ ->
-            0
