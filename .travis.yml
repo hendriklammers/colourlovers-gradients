@@ -4,8 +4,7 @@ elm:
 node_js:
   - '10'
 script:
-  - npm run analyse
-  - npm run build
+  - npm run ci
 deploy:
   provider: surge
   skip_cleanup: true

@@ -7,6 +7,7 @@
   "scripts": {
     "analyse": "elm-analyse",
     "build": "webpack -p",
+    "ci": "npm run analyse && npm test && npm run build",
     "deploy": "surge ./public/ colourlovers-gradients.surge.sh",
     "favicon": "ts-node ./bin/favicon.ts",
     "fetch-data": "ts-node ./bin/fetch-data.ts 500",
