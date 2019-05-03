@@ -7,13 +7,10 @@ const mode =
 
 const common: webpack.Configuration = {
   mode,
-  entry: {
-    app: path.join(__dirname, '/src/index.ts'),
-    sw: path.join(__dirname, '/src/sw.ts'),
-  },
+  entry: path.join(__dirname, '/src/index.ts'),
   output: {
     path: path.resolve(__dirname, 'public'),
-    filename: '[name].js',
+    filename: 'bundle.js',
   },
   module: {
     rules: [
