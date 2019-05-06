@@ -75,6 +75,7 @@ globalStyles =
             [ C.margin (C.px 0)
             , C.height (C.vh 100)
             , C.displayFlex
+            , C.backgroundColor <| C.hex "C6C5C3"
             , C.fontWeight <| C.int 400
             , C.fontSize <| C.px 16
             , C.color <| C.hex "1C1614"
@@ -155,11 +156,11 @@ viewPreloader =
                         ]
                         []
                 )
-                [ "1C1614"
-                , "55514F"
-                , "8E8B8A"
-                , "E9E8E8"
-                , "C6C5C3"
+                [ "AAFF00"
+                , "FFAA00"
+                , "FF00AA"
+                , "AA00FF"
+                , "00AAFF"
                 ]
             )
         ]
@@ -354,16 +355,7 @@ viewError : String -> Html Msg
 viewError msg =
     div
         [ css
-            [ flexCenterStyle
-            , C.backgroundImage <|
-                gradientBackground
-                    (Gradient
-                        ( "1C1614", 0 )
-                        ( "E9E8E8", 70 )
-                        [ ( "FFF", 90 ) ]
-                        90
-                    )
-            ]
+            [ flexCenterStyle ]
         ]
         [ div
             [ css
