@@ -29,6 +29,7 @@ const common: webpack.Configuration = {
       cacheId: 'colourlovers-gradients',
       globDirectory: 'public/',
       globPatterns: ['**/*.{js,png,html,json}'],
+      skipWaiting: true,
     }),
   ],
   resolve: {
