@@ -4,4 +4,5 @@ node_modules
 elm-stuff
 dist
 .env
-app.js
+bundle.js
+service-worker.js

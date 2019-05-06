@@ -1,6 +1,7 @@
 import webpack from 'webpack'
 import merge from 'webpack-merge'
 import path from 'path'
+import workbox from 'workbox-webpack-plugin'
 
 const mode =
   process.env.npm_lifecycle_event === 'build' ? 'production' : 'development'
@@ -21,6 +22,13 @@ const common: webpack.Configuration = {
       },
     ],
   },
+  plugins: [
+    new workbox.GenerateSW({
+      swDest: 'service-worker.js',
+      importWorkboxFrom: 'local',
+      cacheId: 'colourlovers-gradients',
+    }),
+  ],
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.elm'],
   },

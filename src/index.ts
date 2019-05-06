@@ -43,17 +43,11 @@ const updateFavicon = ({ colors, widths }: Palette) => {
 
 app.ports.updateFavicon.subscribe(updateFavicon)
 
-// Register service-workder
+// Register service-worker
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
+  window.addEventListener('load', () => {
     try {
-      const registration = await navigator.serviceWorker.register(
-        '/service-worker.js'
-      )
-      console.log(
-        'ServiceWorker registration successful with scope: ',
-        registration.scope
-      )
+      navigator.serviceWorker.register('/service-worker.js')
     } catch (err) {
       console.log('ServiceWorker registration failed: ', err)
     }
