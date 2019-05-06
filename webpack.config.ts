@@ -27,6 +27,8 @@ const common: webpack.Configuration = {
       swDest: 'service-worker.js',
       importWorkboxFrom: 'local',
       cacheId: 'colourlovers-gradients',
+      globDirectory: 'public/',
+      globPatterns: ['**/*.{js,png,html,json}'],
     }),
   ],
   resolve: {
