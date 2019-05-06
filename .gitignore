@@ -6,3 +6,4 @@ dist
 .env
 bundle.js
 service-worker.js
+workbox*
