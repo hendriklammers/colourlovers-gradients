@@ -406,33 +406,30 @@ viewColor color width =
 viewPalette : Int -> Int -> Palette -> Html Msg
 viewPalette current index { colors, widths } =
     let
-        active =
+        activeStyles =
             if current == index then
-                span
-                    [ css
+                C.batch
+                    [ C.before
                         [ C.display C.block
+                        , C.property "content" "''"
                         , C.position C.absolute
-                        , C.right <| C.px -24
-                        , C.top <| C.px -3
-                        , C.color <| C.hex "C6C5C3"
-                        , C.fontSize <| C.px 120
-                        , C.lineHeight <| C.px settings.paletteSize
-                        , C.textShadow4
+                        , C.right <| C.pct -30
+                        , C.top <| C.pct 25
+                        , C.backgroundColor <| C.hex "C6C5C3"
+                        , C.width <| C.pct 50
+                        , C.height <| C.pct 50
+                        , C.transform <| C.rotate (C.deg 45)
+                        , C.boxShadow5
                             (C.px 2)
+                            (C.px 3)
                             (C.px 2)
-                            (C.px 2)
+                            (C.px 0)
                             (C.rgba 0 0 0 0.7)
-                        , C.transform <| C.scaleX -1
-                        , mediaMobile
-                            [ C.lineHeight <| C.px (settings.paletteSize / 1.5)
-                            , C.top <| C.px -6
-                            ]
                         ]
                     ]
-                    [ text "▸" ]
 
             else
-                text ""
+                C.batch []
     in
     li
         [ onClick (Navigate (Jump index))
@@ -446,9 +443,10 @@ viewPalette current index { colors, widths } =
                 , C.overflow C.hidden
                 , mediaMobile
                     [ C.height <| C.px (settings.paletteSize / 1.5) ]
+                , activeStyles
                 ]
             ]
-            (active :: List.map2 viewColor colors widths)
+            (List.map2 viewColor colors widths)
         ]
 
 
