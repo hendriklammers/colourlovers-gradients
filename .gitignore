@@ -7,3 +7,4 @@ dist
 bundle.js
 service-worker.js
 workbox*
+.netlify
