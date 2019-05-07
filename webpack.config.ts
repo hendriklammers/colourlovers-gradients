@@ -24,12 +24,11 @@ const common: webpack.Configuration = {
   },
   plugins: [
     new workbox.GenerateSW({
-      swDest: 'service-worker.js',
       importWorkboxFrom: 'local',
       cacheId: 'colourlovers-gradients',
       globDirectory: 'public/',
       globPatterns: ['**/*.{js,png,html,json}'],
-      skipWaiting: true,
+      navigateFallback: '/index.html',
     }),
   ],
   resolve: {
