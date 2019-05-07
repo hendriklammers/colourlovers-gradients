@@ -2,7 +2,7 @@
 
 Color palettes from Colourlovers as CSS gradients
 
-Link: <https://colourlovers-gradients.surge.sh>
+Link: <colourlovers-gradients.netlify.com>
 
 
 ## License

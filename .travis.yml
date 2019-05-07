@@ -5,8 +5,3 @@ node_js:
   - '10'
 script:
   - npm run ci
-deploy:
-  provider: surge
-  skip_cleanup: true
-  domain: colourlovers-gradients.surge.sh
-  project: ./public/
