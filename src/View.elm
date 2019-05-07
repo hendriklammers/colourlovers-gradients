@@ -168,6 +168,18 @@ viewPreloader =
 
 viewButton : Button -> Html Msg
 viewButton { icon, label, msg, size, attributes } =
+    let
+        activeStyles =
+            [ C.backgroundColor <| C.hex "A4FF44"
+            , C.transform <| C.translate2 (C.px -1) (C.px 2)
+            , C.boxShadow5
+                (C.px 0)
+                (C.px 0)
+                (C.px 0)
+                (C.px 0)
+                (C.rgba 0 0 0 0.7)
+            ]
+    in
     button
         ([ onClick msg
          , css
@@ -189,16 +201,10 @@ viewButton { icon, label, msg, size, attributes } =
                 (C.px 2)
                 (C.px 0)
                 (C.rgba 0 0 0 0.7)
-            , C.hover
-                [ C.backgroundColor <| C.hex "A4FF44"
-                , C.transform <| C.translate2 (C.px -1) (C.px 2)
-                , C.boxShadow5
-                    (C.px 0)
-                    (C.px 0)
-                    (C.px 0)
-                    (C.px 0)
-                    (C.rgba 0 0 0 0.7)
-                ]
+            , C.active activeStyles
+            , withMediaQuery
+                [ "(hover: hover)" ]
+                [ C.hover activeStyles ]
             ]
          , attribute "aria-label" label
          , title label
