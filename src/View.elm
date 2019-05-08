@@ -201,9 +201,7 @@ viewButton { icon, label, msg, size, attributes } =
                 (C.px 2)
                 (C.px 0)
                 (C.rgba 0 0 0 0.7)
-            , withMediaQuery
-                [ "(hover: hover)" ]
-                [ C.hover activeStyles ]
+            , C.hover activeStyles
             ]
          , attribute "aria-label" label
          , title label
