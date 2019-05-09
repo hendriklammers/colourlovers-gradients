@@ -488,7 +488,7 @@ view model =
         Error msg ->
             viewContainer [ viewError msg ]
 
-        Success ({ palettes, gradient, notification } as viewModel) ->
+        Success ({ gradient, notification } as viewModel) ->
             viewContainer
                 [ viewNavigation viewModel
                 , case notification of

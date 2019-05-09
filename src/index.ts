@@ -2,7 +2,7 @@ import { Elm } from './Main'
 import Clipboard from 'clipboard'
 
 const app = Elm.Main.init({
-  flags: { touch: 'ontouchstart' in window },
+  flags: { touch: 'ontouchstart' in window, online: navigator.onLine },
   node: document.getElementById('app'),
 })
 

@@ -16,7 +16,7 @@ export namespace Elm {
     }
     export function init(options: {
       node?: HTMLElement | null;
-      flags: { touch: boolean };
+      flags: { touch: boolean; online: boolean };
     }): Elm.Main.App;
   }
 }

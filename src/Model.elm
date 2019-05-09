@@ -26,7 +26,9 @@ type Model
 
 
 type alias Flags =
-    { touch : Bool }
+    { touch : Bool
+    , online : Bool -- Unused right now
+    }
 
 
 type alias View =
@@ -92,7 +94,7 @@ update msg model =
 
 
 updateView : Msg -> View -> ( Model, Cmd Msg )
-updateView msg ({ palettes, gradient, notification } as view) =
+updateView msg ({ palettes, gradient } as view) =
     case msg of
         Navigate nav ->
             let
