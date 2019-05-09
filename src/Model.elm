@@ -100,13 +100,13 @@ updateView msg ({ palettes, gradient, notification } as view) =
                     navigate palettes.data palettes.active nav
             in
             case selectGradient index palettes.data of
-                Just ( grad, palette ) ->
+                Just ( newGradient, palette ) ->
                     ( Success
                         { view
                             | palettes =
                                 { palettes | active = index }
                             , gradient =
-                                { gradient | angle = gradient.angle }
+                                { newGradient | angle = gradient.angle }
                         }
                     , Cmd.batch
                         [ cmd
