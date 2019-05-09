@@ -4,6 +4,7 @@ module Model exposing
     , Msg(..)
     , Navigation(..)
     , Notification
+    , Touch
     , View
     , totalPages
     , update
@@ -35,8 +36,12 @@ type alias View =
     { palettes : Palettes
     , gradient : Gradient
     , notification : Maybe Notification
-    , touch : Bool
+    , touch : Touch
     }
+
+
+type alias Touch =
+    Bool
 
 
 type alias Notification =

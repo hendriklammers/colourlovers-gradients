@@ -27,6 +27,7 @@ import Model
         , Msg(..)
         , Navigation(..)
         , Notification
+        , Touch
         , View
         , totalPages
         )
@@ -43,10 +44,6 @@ type alias Button =
     , size : Float
     , attributes : List (Attribute Msg)
     }
-
-
-type alias Touch =
-    Bool
 
 
 pxToRem : Float -> C.Rem
