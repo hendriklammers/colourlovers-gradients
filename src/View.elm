@@ -27,6 +27,7 @@ import Model
         , Msg(..)
         , Navigation(..)
         , Notification
+        , View
         , totalPages
         )
 import Palette exposing (Color, Palette, Palettes)
@@ -42,6 +43,10 @@ type alias Button =
     , size : Float
     , attributes : List (Attribute Msg)
     }
+
+
+type alias Touch =
+    Bool
 
 
 pxToRem : Float -> C.Rem
@@ -166,19 +171,24 @@ viewPreloader =
         ]
 
 
-viewButton : Button -> Html Msg
-viewButton { icon, label, msg, size, attributes } =
+viewButton : Touch -> Button -> Html Msg
+viewButton touch { icon, label, msg, size, attributes } =
     let
-        activeStyles =
-            [ C.backgroundColor <| C.hex "A4FF44"
-            , C.transform <| C.translate2 (C.px -1) (C.px 2)
-            , C.boxShadow5
-                (C.px 0)
-                (C.px 0)
-                (C.px 0)
-                (C.px 0)
-                (C.rgba 0 0 0 0.7)
-            ]
+        hoverStyles =
+            if not touch then
+                C.hover
+                    [ C.backgroundColor <| C.hex "A4FF44"
+                    , C.transform <| C.translate2 (C.px -1) (C.px 2)
+                    , C.boxShadow5
+                        (C.px 0)
+                        (C.px 0)
+                        (C.px 0)
+                        (C.px 0)
+                        (C.rgba 0 0 0 0.7)
+                    ]
+
+            else
+                C.batch []
     in
     button
         ([ onClick msg
@@ -201,7 +211,7 @@ viewButton { icon, label, msg, size, attributes } =
                 (C.px 2)
                 (C.px 0)
                 (C.rgba 0 0 0 0.7)
-            , C.hover activeStyles
+            , hoverStyles
             ]
          , attribute "aria-label" label
          , title label
@@ -211,8 +221,8 @@ viewButton { icon, label, msg, size, attributes } =
         [ icon ]
 
 
-viewPaletteNavigation : Palettes -> Html Msg
-viewPaletteNavigation { data, page } =
+viewPaletteNavigation : Touch -> Palettes -> Html Msg
+viewPaletteNavigation touch { data, page } =
     nav
         [ css
             [ C.displayFlex
@@ -221,7 +231,9 @@ viewPaletteNavigation { data, page } =
             ]
         , attribute "aria-label" "Pagination"
         ]
-        [ viewButton (Button (text "←") "Previous" (Paginate Previous) 30 [])
+        [ viewButton
+            touch
+            (Button (text "←") "Previous" (Paginate Previous) 30 [])
         , span
             [ css
                 [ C.lineHeight <| pxToRem 30
@@ -234,12 +246,14 @@ viewPaletteNavigation { data, page } =
             , text "/"
             , span [] [ text <| String.fromInt (totalPages data) ]
             ]
-        , viewButton (Button (text "→") "Next" (Paginate Next) 30 [])
+        , viewButton
+            touch
+            (Button (text "→") "Next" (Paginate Next) 30 [])
         ]
 
 
-viewNavigation : Gradient -> Html Msg
-viewNavigation gradient =
+viewNavigation : View -> Html Msg
+viewNavigation { gradient, touch } =
     let
         buttonSize =
             40
@@ -286,11 +300,11 @@ viewNavigation gradient =
                 ]
             ]
         ]
-        (List.map viewButton buttons)
+        (List.map (viewButton touch) buttons)
 
 
-viewPalettes : Palettes -> Html Msg
-viewPalettes palettes =
+viewPalettes : View -> Html Msg
+viewPalettes { palettes, touch } =
     div
         [ css
             [ C.displayFlex
@@ -303,7 +317,7 @@ viewPalettes palettes =
                 ]
             ]
         ]
-        [ viewPaletteNavigation palettes
+        [ viewPaletteNavigation touch palettes
         , div
             [ css
                 [ C.overflowY C.scroll
@@ -474,9 +488,9 @@ view model =
         Error msg ->
             viewContainer [ viewError msg ]
 
-        Success { palettes, gradient, notification } ->
+        Success ({ palettes, gradient, notification } as viewModel) ->
             viewContainer
-                [ viewNavigation gradient
+                [ viewNavigation viewModel
                 , case notification of
                     Just message ->
                         viewNotification message
@@ -484,5 +498,5 @@ view model =
                     Nothing ->
                         text ""
                 , viewGradient gradient
-                , viewPalettes palettes
+                , viewPalettes viewModel
                 ]

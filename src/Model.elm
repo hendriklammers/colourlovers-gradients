@@ -4,6 +4,7 @@ module Model exposing
     , Msg(..)
     , Navigation(..)
     , Notification
+    , View
     , totalPages
     , update
     )
