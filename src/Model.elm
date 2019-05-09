@@ -149,7 +149,7 @@ updateView msg ({ palettes, gradient, notification } as view) =
                                 "Failed to copy CSS code to clipboard"
                             )
                 }
-            , Cmd.none
+            , delay 1500 CloseNotification
             )
 
         CloseNotification ->
