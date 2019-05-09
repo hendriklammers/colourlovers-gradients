@@ -468,13 +468,13 @@ viewGradient gradient =
 view : Model -> Html Msg
 view model =
     case model of
-        Init ->
+        Init _ ->
             viewContainer [ viewPreloader ]
 
         Error msg ->
             viewContainer [ viewError msg ]
 
-        Success palettes gradient notification ->
+        Success { palettes, gradient, notification } ->
             viewContainer
                 [ viewNavigation gradient
                 , case notification of

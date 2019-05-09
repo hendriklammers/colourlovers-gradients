@@ -1,5 +1,6 @@
 module Model exposing
-    ( Model(..)
+    ( Flags
+    , Model(..)
     , Msg(..)
     , Navigation(..)
     , Notification
@@ -18,9 +19,21 @@ import Task
 
 
 type Model
-    = Init
+    = Init Flags
     | Error String
-    | Success Palettes Gradient (Maybe Notification)
+    | Success View
+
+
+type alias Flags =
+    { touch : Bool }
+
+
+type alias View =
+    { palettes : Palettes
+    , gradient : Gradient
+    , notification : Maybe Notification
+    , touch : Bool
+    }
 
 
 type alias Notification =
@@ -47,13 +60,16 @@ type Navigation
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
-        ( ReceiveData (Ok data), Init ) ->
+        ( ReceiveData (Ok data), Init { touch } ) ->
             case selectGradient 0 data of
                 Just ( gradient, palette ) ->
                     ( Success
-                        (Palettes data 0 1)
-                        gradient
-                        Nothing
+                        (View
+                            (Palettes data 0 1)
+                            gradient
+                            Nothing
+                            touch
+                        )
                     , updateFavicon palette
                     )
 
@@ -62,22 +78,35 @@ update msg model =
                     , Cmd.none
                     )
 
-        ( ReceiveData (Err _), Init ) ->
+        ( ReceiveData (Err _), _ ) ->
             ( Error "Unable to load the color palettes from the server"
             , Cmd.none
             )
 
-        ( Navigate nav, Success palettes { angle } notification ) ->
+        ( viewMsg, Success view ) ->
+            updateView viewMsg view
+
+        _ ->
+            ( model, Cmd.none )
+
+
+updateView : Msg -> View -> ( Model, Cmd Msg )
+updateView msg ({ palettes, gradient, notification } as view) =
+    case msg of
+        Navigate nav ->
             let
                 ( index, cmd ) =
                     navigate palettes.data palettes.active nav
             in
             case selectGradient index palettes.data of
-                Just ( gradient, palette ) ->
+                Just ( grad, palette ) ->
                     ( Success
-                        { palettes | active = index }
-                        { gradient | angle = angle }
-                        notification
+                        { view
+                            | palettes =
+                                { palettes | active = index }
+                            , gradient =
+                                { gradient | angle = gradient.angle }
+                        }
                     , Cmd.batch
                         [ cmd
                         , updateFavicon palette
@@ -89,44 +118,46 @@ update msg model =
                     , Cmd.none
                     )
 
-        ( Paginate nav, Success palettes gradient notification ) ->
+        Paginate nav ->
             ( Success
-                { palettes | page = paginate palettes nav }
-                gradient
-                notification
+                { view
+                    | palettes =
+                        { palettes | page = paginate palettes nav }
+                }
             , Cmd.none
             )
 
-        ( Rotate angle, Success palettes gradient _ ) ->
+        Rotate angle ->
             ( Success
-                palettes
-                { gradient | angle = gradient.angle + angle }
-                Nothing
+                { view
+                    | gradient =
+                        { gradient | angle = gradient.angle + angle }
+                }
             , Cmd.none
             )
 
-        ( CopyConfirmation ( success, _ ), Success palettes gradient _ ) ->
+        CopyConfirmation ( success, _ ) ->
             ( Success
-                palettes
-                gradient
-                (Just
-                    (if success then
-                        "Copied CSS code to clipboard."
+                { view
+                    | notification =
+                        Just
+                            (if success then
+                                "Copied CSS code to clipboard."
 
-                     else
-                        "Failed to copy CSS code to clipboard"
-                    )
-                )
-            , delay 1500 CloseNotification
+                             else
+                                "Failed to copy CSS code to clipboard"
+                            )
+                }
+            , Cmd.none
             )
 
-        ( CloseNotification, Success palettes gradient _ ) ->
-            ( Success palettes gradient Nothing
+        CloseNotification ->
+            ( Success { view | notification = Nothing }
             , Cmd.none
             )
 
         _ ->
-            ( model, Cmd.none )
+            ( Success view, Cmd.none )
 
 
 delay : Float -> Msg -> Cmd Msg
