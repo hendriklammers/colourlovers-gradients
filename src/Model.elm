@@ -3,7 +3,7 @@ module Model exposing
     , Model(..)
     , Msg(..)
     , Navigation(..)
-    , Notification
+    , Notification(..)
     , Touch
     , View
     , totalPages
@@ -35,7 +35,7 @@ type alias Flags =
 type alias View =
     { palettes : Palettes
     , gradient : Gradient
-    , notification : Maybe Notification
+    , notification : Notification
     , touch : Touch
     }
 
@@ -44,8 +44,9 @@ type alias Touch =
     Bool
 
 
-type alias Notification =
-    String
+type Notification
+    = Closed
+    | Message String
 
 
 type Msg
@@ -75,7 +76,7 @@ update msg model =
                         (View
                             (Palettes data 0 1)
                             gradient
-                            Nothing
+                            Closed
                             touch
                         )
                     , updateFavicon palette
@@ -148,7 +149,7 @@ updateView msg ({ palettes, gradient } as view) =
             ( Success
                 { view
                     | notification =
-                        Just
+                        Message
                             (if success then
                                 "Copied CSS code to clipboard."
 
@@ -160,7 +161,7 @@ updateView msg ({ palettes, gradient } as view) =
             )
 
         CloseNotification ->
-            ( Success { view | notification = Nothing }
+            ( Success { view | notification = Closed }
             , Cmd.none
             )
 

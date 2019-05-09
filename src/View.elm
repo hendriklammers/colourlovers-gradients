@@ -26,7 +26,7 @@ import Model
         ( Model(..)
         , Msg(..)
         , Navigation(..)
-        , Notification
+        , Notification(..)
         , Touch
         , View
         , totalPages
@@ -339,30 +339,35 @@ viewPalettes { palettes, touch } =
 
 
 viewNotification : Notification -> Html Msg
-viewNotification message =
-    div
-        [ css
-            [ C.position C.absolute
-            , C.left <| C.px 10
-            , C.top <| C.px 10
-            , C.padding2 (C.px 8) (pxToRem 10)
-            , C.backgroundColor <| C.hex "fff"
-            , C.boxShadow5
-                (C.px -3)
-                (C.px 3)
-                (C.px 2)
-                (C.px 0)
-                (C.rgba 0 0 0 0.7)
-            ]
-        ]
-        [ p
-            [ css
-                [ C.fontSize <| pxToRem 18
-                , C.margin <| C.px 0
+viewNotification notification =
+    case notification of
+        Message message ->
+            div
+                [ css
+                    [ C.position C.absolute
+                    , C.left <| C.px 10
+                    , C.top <| C.px 10
+                    , C.padding2 (C.px 8) (pxToRem 10)
+                    , C.backgroundColor <| C.hex "fff"
+                    , C.boxShadow5
+                        (C.px -3)
+                        (C.px 3)
+                        (C.px 2)
+                        (C.px 0)
+                        (C.rgba 0 0 0 0.7)
+                    ]
                 ]
-            ]
-            [ text message ]
-        ]
+                [ p
+                    [ css
+                        [ C.fontSize <| pxToRem 18
+                        , C.margin <| C.px 0
+                        ]
+                    ]
+                    [ text message ]
+                ]
+
+        Closed ->
+            text ""
 
 
 viewError : String -> Html Msg
@@ -488,12 +493,7 @@ view model =
         Success ({ gradient, notification } as viewModel) ->
             viewContainer
                 [ viewNavigation viewModel
-                , case notification of
-                    Just message ->
-                        viewNotification message
-
-                    Nothing ->
-                        text ""
+                , viewNotification notification
                 , viewGradient gradient
                 , viewPalettes viewModel
                 ]
