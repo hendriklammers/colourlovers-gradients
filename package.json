@@ -8,8 +8,8 @@
     "analyse": "elm-analyse",
     "build": "webpack -p",
     "ci": "elm-analyse && elm-test && npm run build",
-    "favicon": "ts-node ./bin/favicon.ts",
-    "fetch-data": "ts-node ./bin/fetch-data.ts 500",
+    "favicon": "ts-node ./scripts/favicon.ts",
+    "fetch-data": "ts-node ./scripts/fetch-data.ts 500",
     "start": "webpack-dev-server",
     "test": "elm-test",
     "types": "elm-typescript-interop"
