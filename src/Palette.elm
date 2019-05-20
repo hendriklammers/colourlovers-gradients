@@ -2,6 +2,7 @@ module Palette exposing
     ( Color
     , Palette
     , Palettes
+    , paletteDecoder
     , paletteListDecoder
     )
 
