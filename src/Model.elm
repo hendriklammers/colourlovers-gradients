@@ -74,7 +74,7 @@ update msg model =
                 Just ( gradient, palette ) ->
                     ( Success
                         (View
-                            (Palettes data 0 1)
+                            (Palettes data 0 0)
                             gradient
                             Closed
                             touch
@@ -105,7 +105,7 @@ updateView msg ({ palettes, gradient } as view) =
         Navigate nav ->
             let
                 index =
-                    navigate palettes.data palettes.active nav
+                    navigate (List.length palettes.data) palettes.active nav
             in
             case selectGradient index palettes.data of
                 Just ( newGradient, palette ) ->
@@ -132,11 +132,7 @@ updateView msg ({ palettes, gradient } as view) =
             )
 
         Paginate nav ->
-            ( Success
-                { view
-                    | palettes =
-                        { palettes | page = paginate palettes nav }
-                }
+            ( Success { view | palettes = paginate palettes nav }
             , Cmd.none
             )
 
@@ -192,32 +188,22 @@ totalPages xs =
     ceiling <| toFloat (List.length xs) / toFloat settings.pageSize
 
 
-paginate : Palettes -> Navigation -> Int
-paginate { data, page } nav =
+paginate : Palettes -> Navigation -> Palettes
+paginate palettes nav =
+    { palettes
+        | page =
+            navigate
+                (totalPages palettes.data)
+                palettes.page
+                nav
+    }
+
+
+navigate : Int -> Int -> Navigation -> Int
+navigate total current nav =
     case nav of
         Next ->
-            if page < totalPages data then
-                page + 1
-
-            else
-                page
-
-        Previous ->
-            if page > 1 then
-                page - 1
-
-            else
-                page
-
-        _ ->
-            page
-
-
-navigate : List a -> Int -> Navigation -> Int
-navigate xs current nav =
-    case nav of
-        Next ->
-            if current < List.length xs - 1 then
+            if current < total - 1 then
                 current + 1
 
             else
@@ -231,7 +217,7 @@ navigate xs current nav =
                 current
 
         Jump i ->
-            if i >= 0 && i < List.length xs then
+            if i >= 0 && i < total then
                 i
 
             else

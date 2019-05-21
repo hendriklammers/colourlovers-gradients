@@ -255,7 +255,7 @@ viewPaletteNavigation touch { data, page } =
                 , mediaMobile [ C.display C.none ]
                 ]
             ]
-            [ span [] [ text <| String.fromInt page ]
+            [ span [] [ text <| String.fromInt (page + 1) ]
             , text "/"
             , span [] [ text <| String.fromInt (totalPages data) ]
             ]
@@ -347,7 +347,7 @@ viewPalettes { palettes, touch } =
                 (List.indexedMap
                     (viewPalette palettes.active)
                     palettes.data
-                    |> List.drop ((palettes.page - 1) * settings.pageSize)
+                    |> List.drop (palettes.page * settings.pageSize)
                     |> List.take settings.pageSize
                 )
             ]
