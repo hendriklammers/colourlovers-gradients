@@ -52,6 +52,7 @@ type Notification
 type Msg
     = ReceiveData (Result Http.Error (List Palette))
     | Navigate Navigation
+    | RandomPalette
     | Paginate Navigation
     | Rotate Float
     | CopyConfirmation ( Bool, String )
@@ -63,7 +64,6 @@ type Navigation
     = Next
     | Previous
     | Jump Int
-    | Random
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -104,7 +104,7 @@ updateView msg ({ palettes, gradient } as view) =
     case msg of
         Navigate nav ->
             let
-                ( index, cmd ) =
+                index =
                     navigate palettes.data palettes.active nav
             in
             case selectGradient index palettes.data of
@@ -116,16 +116,20 @@ updateView msg ({ palettes, gradient } as view) =
                             , gradient =
                                 { newGradient | angle = gradient.angle }
                         }
-                    , Cmd.batch
-                        [ cmd
-                        , updateFavicon palette
-                        ]
+                    , updateFavicon palette
                     )
 
                 Nothing ->
                     ( Error "Unable to show gradient"
                     , Cmd.none
                     )
+
+        RandomPalette ->
+            ( Success view
+            , Random.generate
+                (\i -> Navigate (Jump i))
+                (Random.int 0 (List.length <| palettes.data))
+            )
 
         Paginate nav ->
             ( Success
@@ -209,9 +213,9 @@ paginate { data, page } nav =
             page
 
 
-navigate : List a -> Int -> Navigation -> ( Int, Cmd Msg )
+navigate : List a -> Int -> Navigation -> Int
 navigate xs current nav =
-    ( case nav of
+    case nav of
         Next ->
             if current < List.length xs - 1 then
                 current + 1
@@ -232,15 +236,3 @@ navigate xs current nav =
 
             else
                 current
-
-        Random ->
-            current
-    , case nav of
-        Random ->
-            Random.generate
-                (\i -> Navigate (Jump i))
-                (Random.int 0 (List.length xs))
-
-        _ ->
-            Cmd.none
-    )

@@ -32,7 +32,7 @@ keyDecoder =
                     Navigate Next
 
                 "Enter" ->
-                    Navigate Random
+                    RandomPalette
 
                 _ ->
                     NoOp
