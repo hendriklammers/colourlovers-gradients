@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Css as C
 import Css.Animations as A
-import Css.Global exposing (body, global, html, selector)
+import Css.Global exposing (body, descendants, global, html, selector, typeSelector)
 import Css.Media exposing (withMediaQuery)
 import Gradient exposing (Gradient, gradientBackground, gradientString)
 import Html.Styled
@@ -174,14 +174,18 @@ viewButton touch { icon, label, msg, size, attributes } =
         hoverStyles =
             if not touch then
                 C.hover
-                    [ C.backgroundColor <| C.hex "A4FF44"
-                    , C.transform <| C.translate2 (C.px -1) (C.px 2)
-                    , C.boxShadow5
-                        (C.px 0)
-                        (C.px 0)
-                        (C.px 0)
-                        (C.px 0)
-                        (C.rgba 0 0 0 0.7)
+                    [ descendants
+                        [ typeSelector "div"
+                            [ C.backgroundColor <| C.hex "A4FF44"
+                            , C.transform <| C.translate2 (C.px -1) (C.px 2)
+                            , C.boxShadow5
+                                (C.px 0)
+                                (C.px 0)
+                                (C.px 0)
+                                (C.px 0)
+                                (C.rgba 0 0 0 0.7)
+                            ]
+                        ]
                     ]
 
             else
@@ -197,17 +201,11 @@ viewButton touch { icon, label, msg, size, attributes } =
             , C.overflow C.visible
             , C.border <| C.px 0
             , C.borderRadius <| C.px 0
+            , C.backgroundColor C.transparent
             , C.fontSize <| pxToRem 21
             , C.lineHeight <| pxToRem size
             , C.textAlign C.center
             , C.cursor C.pointer
-            , C.backgroundColor <| C.hex "C6C5C3"
-            , C.boxShadow5
-                (C.px -2)
-                (C.px 2)
-                (C.px 2)
-                (C.px 0)
-                (C.rgba 0 0 0 0.7)
             , hoverStyles
             ]
          , attribute "aria-label" label
@@ -215,7 +213,20 @@ viewButton touch { icon, label, msg, size, attributes } =
          ]
             ++ attributes
         )
-        [ icon ]
+        [ div
+            [ css
+                [ C.backgroundColor <| C.hex "C6C5C3"
+                , C.boxShadow5
+                    (C.px -2)
+                    (C.px 2)
+                    (C.px 2)
+                    (C.px 0)
+                    (C.rgba 0 0 0 0.7)
+                ]
+            ]
+            [ icon
+            ]
+        ]
 
 
 viewPaletteNavigation : Touch -> Palettes -> Html Msg
