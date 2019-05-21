@@ -6,6 +6,7 @@ module Model exposing
     , Notification(..)
     , Touch
     , View
+    , navigate
     , totalPages
     , update
     )
