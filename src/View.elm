@@ -4,6 +4,7 @@ import Css as C
 import Css.Animations as A
 import Css.Global exposing (body, descendants, global, html, selector, typeSelector)
 import Css.Media exposing (withMediaQuery)
+import Css.Transitions as T
 import Gradient exposing (Gradient, gradientBackground, gradientString)
 import Html.Styled
     exposing
@@ -222,6 +223,10 @@ viewButton touch { icon, label, msg, size, attributes } =
                     (C.px 2)
                     (C.px 0)
                     (C.rgba 0 0 0 0.7)
+                , T.transition
+                    [ T.transform3 100 0 T.easeOut
+                    , T.boxShadow3 100 0 T.easeOut
+                    ]
                 ]
             ]
             [ icon
