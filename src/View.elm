@@ -246,7 +246,25 @@ viewPaletteNavigation touch { data, page } =
         ]
         [ viewButton
             touch
-            (Button (text "←") "Previous" (Paginate Previous) 30 [])
+            (Button
+                (svg
+                    [ S.width "16"
+                    , S.height "14"
+                    , S.viewBox "0 0 16 14"
+                    , S.transform "scale(0.8, 0.8)"
+                    ]
+                    [ polygon
+                        [ S.points "12 6 8.05025253 2.05025253 9.46446609 0.636038969 15.8284271 7 9.46446609 13.363961 8.05025253 11.9497475 12 8 0 8 0 6 11 6"
+                        , S.transform "scale(-1, 1) translate(-16, 0)"
+                        ]
+                        []
+                    ]
+                )
+                "Previous"
+                (Paginate Previous)
+                30
+                []
+            )
         , span
             [ css
                 [ C.lineHeight <| pxToRem 30
@@ -261,7 +279,23 @@ viewPaletteNavigation touch { data, page } =
             ]
         , viewButton
             touch
-            (Button (text "→") "Next" (Paginate Next) 30 [])
+            (Button
+                (svg
+                    [ S.width "16"
+                    , S.height "14"
+                    , S.viewBox "0 0 16 14"
+                    , S.transform "scale(0.8, 0.8)"
+                    ]
+                    [ polygon
+                        [ S.points "12 6 8.05025253 2.05025253 9.46446609 0.636038969 15.8284271 7 9.46446609 13.363961 8.05025253 11.9497475 12 8 0 8 0 6 11 6" ]
+                        []
+                    ]
+                )
+                "Next"
+                (Paginate Next)
+                30
+                []
+            )
         ]
 
 
