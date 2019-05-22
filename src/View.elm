@@ -34,7 +34,7 @@ import Model
         )
 import Palette exposing (Color, Palette, Palettes)
 import Settings exposing (settings)
-import Svg.Styled exposing (path, svg)
+import Svg.Styled exposing (path, polygon, svg)
 import Svg.Styled.Attributes as S
 
 
@@ -272,7 +272,21 @@ viewNavigation { gradient, touch } =
             40
 
         buttons =
-            [ Button (text "↻") "Rotate" (Rotate 45) buttonSize []
+            [ Button
+                (svg
+                    [ S.width "14"
+                    , S.height "18"
+                    , S.viewBox "0 0 14 18"
+                    ]
+                    [ path
+                        [ S.d "M7.12236839,4.00104805 C7.08166264,4.0003503 7.04087223,4 7,4 C3.13400675,4 0,7.13400675 0,11 C0,14.8659932 3.13400675,18 7,18 C10.8659932,18 14,14.8659932 14,11 L12,11 C12,13.7614237 9.76142375,16 7,16 C4.23857625,16 2,13.7614237 2,11 C2,8.23857625 4.23857625,6 7,6 C7.00692765,6 7.013852,6.00001409 7.02077304,6.00004224 L4.53553391,8.48528137 L5.94974747,9.89949494 L10.8994949,4.94974747 L5.94974747,0 L4.53553391,1.41421356 L7.12236839,4.00104805 L7.12236839,4.00104805 Z" ]
+                        []
+                    ]
+                )
+                "Rotate"
+                (Rotate 45)
+                buttonSize
+                []
             , Button
                 (svg
                     [ S.width "18"
@@ -290,8 +304,38 @@ viewNavigation { gradient, touch } =
                 [ id "clipboard-copy"
                 , attribute "data-clipboard-text" (gradientString gradient)
                 ]
-            , Button (text "←") "Previous" (Navigate Previous) buttonSize []
-            , Button (text "→") "Next" (Navigate Next) buttonSize []
+            , Button
+                (svg
+                    [ S.width "16"
+                    , S.height "14"
+                    , S.viewBox "0 0 16 14"
+                    ]
+                    [ polygon
+                        [ S.points "12 6 8.05025253 2.05025253 9.46446609 0.636038969 15.8284271 7 9.46446609 13.363961 8.05025253 11.9497475 12 8 0 8 0 6 11 6"
+                        , S.transform "scale(-1, 1) translate(-16, 0)"
+                        ]
+                        []
+                    ]
+                )
+                "Previous"
+                (Navigate Previous)
+                buttonSize
+                []
+            , Button
+                (svg
+                    [ S.width "16"
+                    , S.height "14"
+                    , S.viewBox "0 0 16 14"
+                    ]
+                    [ polygon
+                        [ S.points "12 6 8.05025253 2.05025253 9.46446609 0.636038969 15.8284271 7 9.46446609 13.363961 8.05025253 11.9497475 12 8 0 8 0 6 11 6" ]
+                        []
+                    ]
+                )
+                "Next"
+                (Navigate Next)
+                buttonSize
+                []
             ]
     in
     nav
