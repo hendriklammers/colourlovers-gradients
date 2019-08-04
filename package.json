@@ -7,7 +7,7 @@
   "scripts": {
     "analyse": "elm-analyse",
     "build": "webpack -p",
-    "ci": "elm-analyse && elm-test && npm run build",
+    "travis": "elm-analyse && elm-test && npm run build",
     "favicon": "ts-node ./scripts/favicon.ts",
     "fetch-data": "ts-node ./scripts/fetch-data.ts 500",
     "start": "webpack-dev-server",
